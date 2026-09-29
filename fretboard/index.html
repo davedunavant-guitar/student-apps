@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fretboard · Lessons with David</title>
+<meta name="description" content="Pick a key and a scale. The shape lights up on the neck. Tap any note to hear it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --ground:#14100D; --panel:#1E1813; --panel-hi:#2A221B;
+    --ivory:#EDE3D0; --muted:#9C8E7B; --brass:#C9A227; --jewel:#D9483B; --wire:#8C8578;
+  }
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--ground); color:var(--ivory);
+    font-family:"Newsreader",Georgia,serif; font-size:17px; line-height:1.5;
+    -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:flex;flex-direction:column;gap:22px}
+
+  .plate{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1px solid #3A2A1F;padding-bottom:16px}
+  .eyebrow{font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.26em;font-size:.72rem;color:var(--brass);margin:0 0 6px}
+  h1{font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:clamp(2rem,8vw,3.4rem);line-height:.94;margin:0;text-wrap:balance}
+  #forLine{margin:8px 0 0;font-size:1.05rem;color:var(--ivory)}
+  #msgLine{margin:6px 0 0;font-size:1rem;color:var(--muted);max-width:56ch}
+  .tunetag{font-family:"IBM Plex Mono",monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
+
+  .rack{display:flex;flex-direction:column;gap:9px}
+  .rack-label{font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:.72rem;color:var(--muted)}
+  .row{display:flex;flex-wrap:wrap;gap:7px}
+  button{font:inherit;cursor:pointer;border-radius:3px;border:1px solid #3A2A1F;background:var(--panel);color:var(--ivory);transition:background .12s,border-color .12s,color .12s}
+  button:hover{background:var(--panel-hi);border-color:var(--brass)}
+  button:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+  .key{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:1.05rem;min-width:54px;padding:13px 9px}
+  .key[aria-pressed="true"]{background:var(--jewel);border-color:var(--jewel);color:#160D0B}
+  .sc,.tn{font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.09em;font-size:1rem;padding:13px 16px}
+  .sc[aria-pressed="true"],.tn[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:#160D0B}
+  .sw{font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.13em;font-size:.95rem;padding:13px 18px;background:transparent;border-color:var(--wire)}
+  .sw.go{border-color:var(--jewel);color:var(--jewel)}
+  .sw.go:hover{background:var(--jewel);color:#160D0B}
+  .sw.share{border-color:var(--brass);color:var(--brass)}
+  .sw.share:hover{background:var(--brass);color:#160D0B}
+
+  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;padding-top:20px}
+  @media (max-width:719px){
+    .plate{order:-2}
+    .scroller{order:-1;padding-left:20px}
+    .readout{order:0}
+    .key{min-width:44px;padding:11px 6px;font-size:.98rem}
+    .sc,.tn{padding:11px 12px;font-size:.92rem}
+    h1{font-size:2.4rem}
+  }
+  #stage{position:relative}
+  .board{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.35)),repeating-linear-gradient(96deg,#3E2C20 0 7px,#35251B 7px 15px);border:1px solid #1A120C;border-radius:4px}
+  .wire-l{position:absolute;background:linear-gradient(180deg,#B9B2A4,#6E685C)}
+  .nut{position:absolute;background:linear-gradient(90deg,#E8DFC9,#BCB09A);border-radius:2px}
+  .str{position:absolute;background:linear-gradient(180deg,#D9D2C4,#7E786C)}
+  .inlay{position:absolute;width:11px;height:11px;border-radius:50%;background:#C8BFA9;opacity:.5;transform:translate(-50%,-50%)}
+  .num{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--muted);transform:translate(-50%,-50%);letter-spacing:.06em}
+  .open{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.74rem;padding:0;background:transparent;border:2px solid var(--wire);color:var(--muted)}
+  .open.on{border-color:var(--ivory);color:var(--ivory)}
+  .open.root{border-color:var(--jewel);color:var(--jewel)}
+  .dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-weight:600;padding:0;border:1px solid transparent;background:transparent}
+  .dot.off{width:16px;height:16px;font-size:.52rem;background:rgba(20,16,13,.42);color:rgba(237,227,208,.32)}
+  .dot.on{width:30px;height:30px;font-size:.74rem;background:var(--ivory);color:#1A120C;box-shadow:0 2px 5px rgba(0,0,0,.5)}
+  .dot.ct{border-color:var(--brass);box-shadow:0 0 0 2px rgba(201,162,39,.55),0 2px 5px rgba(0,0,0,.5)}
+  .dot.root{background:var(--jewel);color:#160D0B;border-color:#F2E4C6}
+  .ring{animation:rg .5s ease-out}
+  @keyframes rg{0%{box-shadow:0 0 0 0 rgba(237,227,208,.85)}100%{box-shadow:0 0 0 18px rgba(237,227,208,0)}}
+
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:#3A2A1F;border:1px solid #3A2A1F;border-radius:4px;overflow:hidden;margin:0}
+  .cell{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:5px}
+  .cell dt{font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.17em;font-size:.7rem;color:var(--muted)}
+  .cell dd{margin:0;font-family:"IBM Plex Mono",monospace;font-size:1rem;letter-spacing:.05em;color:var(--ivory)}
+  .cell dd.prose{font-family:"Newsreader",Georgia,serif;letter-spacing:0;font-size:.98rem;color:var(--muted)}
+
+  .legend{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;color:var(--muted);font-size:.95rem}
+  .legend span{display:flex;align-items:center;gap:8px}
+  .sw-d{width:19px;height:19px;border-radius:50%;flex:none}
+  .r{background:var(--jewel)} .c{background:var(--ivory);box-shadow:0 0 0 2px var(--brass)} .s{background:var(--ivory)}
+  .tip{font-size:.95rem;color:var(--muted);max-width:62ch;margin:0}
+  #teacher{border:1px dashed #3A2A1F;border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  #teacher .rack-label{color:var(--brass)}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--brass);color:#160D0B;font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.12em;padding:12px 20px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{border-top:1px solid #3A2A1F;padding-top:14px;display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:space-between;font-family:"Saira Condensed",Arial,sans-serif;text-transform:uppercase;letter-spacing:.15em;font-size:.72rem;color:var(--muted)}
+  footer a{color:var(--brass);text-decoration:none}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="plate">
+    <div>
+      <p class="eyebrow">Lessons with David</p>
+      <h1>Fretboard</h1>
+      <p id="forLine" hidden></p>
+      <p id="msgLine" hidden></p>
+    </div>
+    <span class="tunetag" id="tuneTag">Standard · E A D G B E</span>
+  </header>
+
+  <div class="rack"><span class="rack-label" id="lk">Key</span><div class="row" id="keys" role="group" aria-labelledby="lk"></div></div>
+  <div class="rack"><span class="rack-label" id="ls">Scale</span><div class="row" id="scales" role="group" aria-labelledby="ls"></div></div>
+  <div class="rack"><span class="rack-label" id="lt">Tuning</span><div class="row" id="tunings" role="group" aria-labelledby="lt"></div></div>
+
+  <div class="row">
+    <button class="sw go" id="run" type="button">&#9654;&nbsp; Play it</button>
+    <button class="sw" id="lab" type="button" aria-pressed="false">Show degrees</button>
+    <button class="sw" id="snd" type="button" aria-pressed="true">Sound: on</button>
+  </div>
+
+  <div class="scroller"><div id="stage"></div></div>
+
+  <dl class="readout" id="readout"></dl>
+
+  <div class="legend">
+    <span><i class="sw-d r"></i> Root</span>
+    <span><i class="sw-d c"></i> Chord tone</span>
+    <span><i class="sw-d s"></i> Scale tone</span>
+  </div>
+
+  <p class="tip">Tap any dot to hear that note. The brass rings are the chord tones. Land on those and the notes in between take care of themselves.</p>
+
+  <section id="teacher">
+    <span class="rack-label">Teacher panel</span>
+    <div class="row" style="gap:8px">
+      <input id="who" placeholder="Student name" style="flex:1 1 150px;min-width:0;padding:12px;border-radius:3px;border:1px solid #3A2A1F;background:var(--panel);color:var(--ivory);font:inherit;font-size:1rem">
+      <input id="say" placeholder="One line for them" style="flex:2 1 240px;min-width:0;padding:12px;border-radius:3px;border:1px solid #3A2A1F;background:var(--panel);color:var(--ivory);font:inherit;font-size:1rem">
+    </div>
+    <div class="row"><button class="sw share" id="share" type="button">Copy link for this student</button></div>
+  </section>
+
+  <footer>
+    <span>David E. Dunavant, M.M.</span>
+    <span><a href="https://guitarlessonswithdavid.com">guitarlessonswithdavid.com</a></span>
+    <span style="opacity:.6;font-size:.8em">Guitar sounds: FluidR3 GM (CC BY 3.0)</span>
+  </footer>
+</div>
+<div id="toast">Link copied</div>
+
+<script>
+(function(){
+"use strict";
+var SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+var FLAT=["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+var FLATKEY={5:1,10:1,3:1,8:1,1:1,6:1};
+
+var SCALES=[
+ {id:"minpent",n:"Minor Pentatonic",st:[0,3,5,7,10],dg:["1","b3","4","5","b7"],ch:[0,3,7],w:"The blues box. Five notes, no wrong turns."},
+ {id:"blues",n:"Blues",st:[0,3,5,6,7,10],dg:["1","b3","4","b5","5","b7"],ch:[0,3,7],w:"Pentatonic plus the flat five. That one note is the grit."},
+ {id:"majpent",n:"Major Pentatonic",st:[0,2,4,7,9],dg:["1","2","3","5","6"],ch:[0,4,7],w:"Country and Southern rock live here."},
+ {id:"major",n:"Major",st:[0,2,4,5,7,9,11],dg:["1","2","3","4","5","6","7"],ch:[0,4,7],w:"Bright and settled. Everything else is measured against this."},
+ {id:"minor",n:"Natural Minor",st:[0,2,3,5,7,8,10],dg:["1","2","b3","4","5","b6","b7"],ch:[0,3,7],w:"Same notes as its relative major, different home base."},
+ {id:"dorian",n:"Dorian",st:[0,2,3,5,7,9,10],dg:["1","2","b3","4","5","6","b7"],ch:[0,3,7],w:"Minor with a raised sixth. Santana, funk, half of jazz."},
+ {id:"mixo",n:"Mixolydian",st:[0,2,4,5,7,9,10],dg:["1","2","3","4","5","6","b7"],ch:[0,4,7],w:"Major with a flat seven. The dominant chord sound."},
+ {id:"harmmin",n:"Harmonic Minor",st:[0,2,3,5,7,8,11],dg:["1","2","b3","4","5","b6","7"],ch:[0,3,7],w:"That jump from b6 up to 7 is the whole flavour."}
+];
+var TUNINGS=[
+ {id:"std",n:"Standard",m:[64,59,55,50,45,40],lab:"E A D G B E"},
+ {id:"dropd",n:"Drop D",m:[64,59,55,50,45,38],lab:"D A D G B E"},
+ {id:"half",n:"Half Step Down",m:[63,58,54,49,44,39],lab:"Eb Ab Db Gb Bb Eb"},
+ {id:"openg",n:"Open G",m:[62,59,55,50,43,38],lab:"D G D G B D"},
+ {id:"dadgad",n:"DADGAD",m:[62,57,55,50,45,38],lab:"D A D G A D"}
+];
+var FRETS=15;
+var S={root:9,scale:"minpent",tuning:"std",deg:false,snd:true};
+
+/* ---- read the link ---- */
+var q=new URLSearchParams(location.search);
+(function(){
+  var k=q.get("k");
+  if(k){ var i=SHARP.indexOf(k); if(i<0)i=FLAT.indexOf(k); if(i>=0)S.root=i; }
+  if(q.get("s")&&SCALES.some(function(x){return x.id===q.get("s")})) S.scale=q.get("s");
+  if(q.get("t")&&TUNINGS.some(function(x){return x.id===q.get("t")})) S.tuning=q.get("t");
+  if(q.get("l")==="d") S.deg=true;
+  var who=q.get("for"), say=q.get("msg");
+  if(who){ var e=document.getElementById("forLine"); e.textContent="For "+who; e.hidden=false; document.getElementById("who").value=who; }
+  if(say){ var m=document.getElementById("msgLine"); m.textContent=say; m.hidden=false; document.getElementById("say").value=say; }
+  // A link built for a student hides the teacher panel. David's blank page keeps it.
+  if(q.get("k")||q.get("s")||who||say) document.getElementById("teacher").hidden=true;
+})();
+
+function sc(){ for(var i=0;i<SCALES.length;i++) if(SCALES[i].id===S.scale) return SCALES[i]; return SCALES[0]; }
+function tu(){ for(var i=0;i<TUNINGS.length;i++) if(TUNINGS[i].id===S.tuning) return TUNINGS[i]; return TUNINGS[0]; }
+function nm(pc){ return (FLATKEY[S.root]?FLAT:SHARP)[pc]; }
+
+/* ---- geometry: real 25.5 inch scale, works both ways round ---- */
+function fd(n){ return 1-Math.pow(2,-n/12); }
+var SPAN=fd(FRETS), PAD_A=1.8, PAD_B=2.4;
+function fretPct(n){ return PAD_A+(fd(n)/SPAN)*(100-PAD_A-PAD_B); }
+function slotPct(n){ return (fretPct(n-1)+fretPct(n))/2; }
+function strPct(i){ return (i+0.5)*(100/6); }
+
+var vertical=false, dots=[], stage=document.getElementById("stage");
+
+function place(el,along,across){
+  if(vertical){ el.style.left=(100-across)+"%"; el.style.top=along+"%"; }
+  else{ el.style.left=along+"%"; el.style.top=across+"%"; }
+}
+
+function build(){
+  vertical = window.innerWidth < 720;
+  var T=tu();
+  stage.innerHTML="";
+  var board=document.createElement("div");
+  board.className="board";
+  var openPad=46;
+
+  if(vertical){
+    board.style.width="100%"; board.style.height="620px"; board.style.marginTop=openPad+"px";
+    stage.style.minWidth="0"; stage.style.height=(620+openPad)+"px";
+  }else{
+    board.style.height="260px"; board.style.marginLeft=openPad+"px"; board.style.width="auto";
+    stage.style.minWidth="900px"; stage.style.height="300px";
+  }
+  stage.appendChild(board);
+
+  var h="";
+  // nut
+  h+='<div class="nut" style="'+(vertical
+      ?'left:0;right:0;top:'+fretPct(0)+'%;height:8px'
+      :'top:0;bottom:0;left:'+fretPct(0)+'%;width:8px')+'"></div>';
+  for(var f=1;f<=FRETS;f++){
+    h+='<div class="wire-l" style="'+(vertical
+      ?'left:0;right:0;top:'+fretPct(f)+'%;height:2px'
+      :'top:0;bottom:0;left:'+fretPct(f)+'%;width:2px')+'"></div>';
+  }
+  [3,5,7,9,15].forEach(function(f){
+    h+='<div class="inlay" style="'+(vertical?'top:'+slotPct(f)+'%;left:50%':'left:'+slotPct(f)+'%;top:50%')+'"></div>';
+  });
+  [29,71].forEach(function(p){
+    h+='<div class="inlay" style="'+(vertical?'top:'+slotPct(12)+'%;left:'+p+'%':'left:'+slotPct(12)+'%;top:'+p+'%')+'"></div>';
+  });
+  var g=[1.1,1.4,1.8,2.2,2.7,3.3];
+  for(var s=0;s<6;s++){
+    h+='<div class="str" style="'+(vertical
+      ?'top:0;bottom:0;left:'+(100-strPct(s))+'%;width:'+g[s]+'px;transform:translateX(-50%)'
+      :'left:0;right:0;top:'+strPct(s)+'%;height:'+g[s]+'px;transform:translateY(-50%)')+'"></div>';
+  }
+  board.innerHTML=h;
+
+  [1,3,5,7,9,12,15].forEach(function(f){
+    var n=document.createElement("div"); n.className="num"; n.textContent=f;
+    if(vertical){ n.style.left="-14px"; n.style.top=slotPct(f)+"%"; }
+    else{ n.style.top="-13px"; n.style.left=slotPct(f)+"%"; }
+    board.appendChild(n);
+  });
+
+  dots=[];
+  for(var st=0;st<6;st++){
+    for(var fr=0;fr<=FRETS;fr++){
+      var midi=T.m[st]+fr;
+      var b=document.createElement("button");
+      b.type="button"; b.dataset.midi=midi;
+      if(fr===0){
+        b.className="open";
+        if(vertical){ b.style.left=(100-strPct(st))+"%"; b.style.top=-(openPad/2)+"px"; }
+        else{ b.style.top=strPct(st)+"%"; b.style.left=-(openPad/2)+"px"; }
+        board.appendChild(b);
+      }else{
+        b.className="dot";
+        place(b,slotPct(fr),strPct(st));
+        board.appendChild(b);
+      }
+      b.addEventListener("click",function(){ pluck(+this.dataset.midi); flash(this); });
+      dots.push(b);
+    }
+  }
+  paint();
+}
+function flash(el){ el.classList.remove("ring"); void el.offsetWidth; el.classList.add("ring"); }
+
+function paint(){
+  var s=sc(), map={}, ch={};
+  s.st.forEach(function(x,i){ map[(S.root+x)%12]=s.dg[i]; });
+  s.ch.forEach(function(x){ ch[(S.root+x)%12]=1; });
+  dots.forEach(function(b){
+    var pc=(+b.dataset.midi)%12, d=map[pc], isOpen=b.className.indexOf("open")===0;
+    var txt = d ? (S.deg?d:nm(pc)) : (S.deg?"":nm(pc));
+    if(isOpen){
+      b.className="open"+(d?" on":"")+(pc===S.root?" root":"");
+      b.style.opacity=d?"1":".4";
+    }else{
+      b.className="dot "+(d?"on":"off")+(d&&ch[pc]?" ct":"")+(pc===S.root?" root":"");
+    }
+    b.textContent=txt;
+    b.setAttribute("aria-label",nm(pc)+(d?", degree "+d:", outside the key"));
+  });
+  var notes=s.st.map(function(x){return nm((S.root+x)%12);}).join("  ");
+  document.getElementById("readout").innerHTML=
+    cell("Showing",nm(S.root)+" "+s.n)+cell("Notes",notes)+cell("Degrees",s.dg.join("  "))+cell("Why it works",s.w,true);
+  document.getElementById("tuneTag").textContent=tu().n+" · "+tu().lab;
+  document.title=nm(S.root)+" "+s.n+" · Fretboard";
+}
+function cell(k,v,prose){ return '<div class="cell"><dt>'+k+'</dt><dd class="'+(prose?"prose":"")+'">'+v+'</dd></div>'; }
+
+/* ---- plucked string ---- */
+var ctx=null,cache={};
+/* Real guitar: recorded acoustic steel-string notes (FluidR3 GM, CC BY 3.0), MIDI 36-88,
+   stored in sounds/. Until a note has loaded, or if loading fails, the old plucked-string
+   synth plays instead, so the page is never silent. */
+var SAMPLES={},__sLoading=false;
+function loadSamples(){
+  if(__sLoading||!ctx||!window.fetch) return; __sLoading=true;
+  for(var m=36;m<=88;m++)(function(m){
+    fetch("sounds/"+m+".mp3").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(function(a){ ctx.decodeAudioData(a,function(b){ SAMPLES[m]=b; },function(){}); })
+      .catch(function(){});
+  })(m);
+}
+
+/* ---- iPhone / iPad audio unlock ----
+   iOS mutes Web Audio when the device is on silent. Two fixes:
+   1. navigator.audioSession "playback" (iOS 17+) tells Safari this is music, not a ding.
+   2. Older iOS: a looping silent <audio> element started on first tap flips the
+      audio session to playback so the silent switch stops muting us. */
+try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
+var __unlocked=false, __silentEl=null;
+function ensureAudio(){
+  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false; ctx=new AC(); }
+  if(ctx.state!=="running"){ try{ ctx.resume(); }catch(e){} }
+  loadSamples();
+  if(!__unlocked){
+    __unlocked=true;
+    try{ var bb=ctx.createBuffer(1,1,22050), ss=ctx.createBufferSource(); ss.buffer=bb; ss.connect(ctx.destination); ss.start(0); }catch(e){}
+    try{
+      __silentEl=document.createElement("audio");
+      __silentEl.setAttribute("playsinline",""); __silentEl.setAttribute("x-webkit-airplay","deny");
+      __silentEl.loop=true; __silentEl.preload="auto";
+      __silentEl.src="data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
+      var pp=__silentEl.play(); if(pp&&pp.catch) pp.catch(function(){});
+    }catch(e){}
+  }
+  return true;
+}
+["touchend","pointerup","click","keydown"].forEach(function(ev){
+  document.addEventListener(ev,function(){ ensureAudio(); },{passive:true,capture:true});
+});
+document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ctx&&ctx.state!=="running"){ try{ctx.resume();}catch(e){} } });
+
+function fq(m){ return 440*Math.pow(2,(m-69)/12); }
+function buf(m){
+  if(SAMPLES[m])return SAMPLES[m];
+  if(cache[m])return cache[m];
+  var sr=ctx.sampleRate,N=Math.max(2,Math.round(sr/fq(m))),len=Math.floor(sr*2.2);
+  var b=ctx.createBuffer(1,len,sr),d=b.getChannelData(0),p=0;
+  for(var i=0;i<N;i++){ var n=Math.random()*2-1; p=0.55*n+0.45*p; d[i]=p; }
+  for(var j=N;j<len;j++){ d[j]=0.5*(d[j-N]+d[j-N+1])*0.99975; }
+  var a=Math.floor(sr*0.004); for(var k=0;k<a;k++) d[k]*=k/a;
+  cache[m]=b; return b;
+}
+function pluck(m,when){
+  if(!S.snd)return;
+  if(!ensureAudio())return;
+  var t=when||ctx.currentTime;
+  var src=ctx.createBufferSource(); src.buffer=buf(m);
+  var real=src.buffer===SAMPLES[m];
+  var f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=real?8000:3400;
+  var g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(real?2.2:0.55,t+0.006);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+2.0);
+  src.connect(f); f.connect(g); g.connect(ctx.destination);
+  src.start(t); src.stop(t+2.1);
+}
+
+var running=false;
+document.getElementById("run").addEventListener("click",function(){
+  if(running)return;
+  var s=sc(),T=tu(),base=T.m[4];
+  var want=((S.root-(base%12))%12+12)%12;
+  base=base+want; if(base>T.m[4]+11)base-=12;
+  var seq=s.st.map(function(x){return base+x;}); seq.push(base+12);
+  running=true; this.textContent="■ Playing…";
+  var btn=this,i=0;
+  var tm=setInterval(function(){
+    if(i>=seq.length){ clearInterval(tm); running=false; btn.innerHTML="▶&nbsp; Play it"; return; }
+    pluck(seq[i]);
+    for(var d=0;d<dots.length;d++){ if(+dots[d].dataset.midi===seq[i]&&dots[d].className.indexOf("off")<0){ flash(dots[d]); break; } }
+    i++;
+  },340);
+});
+
+/* ---- controls ---- */
+var keysEl=document.getElementById("keys");
+for(var pc=0;pc<12;pc++){(function(p){
+  var b=document.createElement("button"); b.type="button"; b.className="key"; b.dataset.pc=p;
+  b.addEventListener("click",function(){ S.root=p; syncK(); paint(); pluck(48+p); });
+  keysEl.appendChild(b);
+})(pc);}
+function syncK(){ for(var i=0;i<keysEl.children.length;i++){ var c=keysEl.children[i],p=+c.dataset.pc; c.textContent=nm(p); c.setAttribute("aria-pressed",p===S.root?"true":"false"); } }
+
+var scEl=document.getElementById("scales");
+SCALES.forEach(function(x){ var b=document.createElement("button"); b.type="button"; b.className="sc"; b.dataset.id=x.id; b.textContent=x.n;
+  b.addEventListener("click",function(){ S.scale=x.id; syncS(); paint(); }); scEl.appendChild(b); });
+function syncS(){ for(var i=0;i<scEl.children.length;i++) scEl.children[i].setAttribute("aria-pressed",scEl.children[i].dataset.id===S.scale?"true":"false"); }
+
+var tnEl=document.getElementById("tunings");
+TUNINGS.forEach(function(x){ var b=document.createElement("button"); b.type="button"; b.className="tn"; b.dataset.id=x.id; b.textContent=x.n;
+  b.addEventListener("click",function(){ S.tuning=x.id; syncT(); build(); }); tnEl.appendChild(b); });
+function syncT(){ for(var i=0;i<tnEl.children.length;i++) tnEl.children[i].setAttribute("aria-pressed",tnEl.children[i].dataset.id===S.tuning?"true":"false"); }
+
+document.getElementById("lab").addEventListener("click",function(){
+  S.deg=!S.deg; this.textContent=S.deg?"Show note names":"Show degrees"; this.setAttribute("aria-pressed",S.deg?"true":"false"); paint();
+});
+document.getElementById("snd").addEventListener("click",function(){
+  S.snd=!S.snd; this.textContent=S.snd?"Sound: on":"Sound: off"; this.setAttribute("aria-pressed",S.snd?"true":"false");
+});
+
+/* ---- the share button: this is the whole point ---- */
+document.getElementById("share").addEventListener("click",function(){
+  var p=new URLSearchParams();
+  p.set("k",nm(S.root)); p.set("s",S.scale);
+  if(S.tuning!=="std")p.set("t",S.tuning);
+  if(S.deg)p.set("l","d");
+  var who=document.getElementById("who").value.trim(), say=document.getElementById("say").value.trim();
+  if(who)p.set("for",who);
+  if(say)p.set("msg",say);
+  var url=location.origin+location.pathname+"?"+p.toString();
+  var done=function(){ var t=document.getElementById("toast"); t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},1600); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done,function(){ window.prompt("Copy this link:",url); });
+  }else{ window.prompt("Copy this link:",url); }
+});
+
+var rt;
+window.addEventListener("resize",function(){ clearTimeout(rt); rt=setTimeout(function(){ if((window.innerWidth<720)!==vertical) build(); },200); });
+
+syncK(); syncS(); syncT();
+document.getElementById("lab").textContent=S.deg?"Show note names":"Show degrees";
+document.getElementById("lab").setAttribute("aria-pressed",S.deg?"true":"false");
+build();
+})();
+</script>
+</body>
+</html>

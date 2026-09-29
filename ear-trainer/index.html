@@ -1,0 +1,157 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Interval Ear Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --ink:#0E1420; --panel:#182235; --panel2:#1F2B42; --line:#2C3A56;
+  --brass:#D2AE63; --ivory:#F3EEE4; --dim:#9AA6BD;
+  --good:#5CC592; --miss:#E57C62;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--ivory);font-family:var(--display);margin:0}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:clamp(16px,4vw,48px);padding-block:clamp(16px,3vw,36px);display:flex;flex-direction:column;gap:clamp(16px,2.4vw,28px)}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+h1{font-size:clamp(28px,4.6vw,56px);font-weight:800;line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 span{color:var(--brass)}
+.score{display:flex;gap:clamp(12px,2vw,28px);font-variant-numeric:tabular-nums}
+.stat{display:flex;flex-direction:column;align-items:flex-end}
+.stat b{font-size:clamp(28px,4vw,52px);line-height:1;font-weight:800}
+.stat small{font-family:var(--mono);font-size:clamp(11px,1.1vw,14px);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.stage{display:grid;grid-template-columns:auto 1fr;gap:clamp(16px,2.4vw,32px);align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:clamp(16px,2.4vw,30px)}
+.play{width:clamp(110px,14vw,170px);aspect-ratio:1;max-width:100%;border-radius:50%;border:none;background:var(--brass);color:var(--ink);font:800 clamp(18px,2vw,26px)/1.1 var(--display);cursor:pointer;box-shadow:0 0 0 6px rgba(210,174,99,.18)}
+.play:active{transform:scale(.97)}
+.play:focus-visible,.iv:focus-visible,.pill:focus-visible{outline:3px solid var(--ivory);outline-offset:3px}
+.msg{display:flex;flex-direction:column;gap:10px;min-width:0}
+.msg .big{font-size:clamp(26px,3.6vw,48px);font-weight:800;line-height:1.05;text-wrap:balance}
+.msg .sub{font-family:var(--mono);font-size:clamp(13px,1.3vw,17px);color:var(--dim)}
+.big.good{color:var(--good)} .big.miss{color:var(--miss)}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:var(--panel2);color:var(--ivory);border-radius:999px;padding:10px 18px;font:500 clamp(14px,1.4vw,18px) var(--display);cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--ivory);color:var(--ink);border-color:var(--ivory)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(8px,1.2vw,14px)}
+.iv{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;border:1px solid var(--line);background:var(--panel);color:var(--ivory);border-radius:16px;padding:clamp(12px,1.6vw,20px);cursor:pointer;min-height:clamp(78px,9vw,108px);transition:background .15s,border-color .15s,opacity .15s}
+.iv b{font-size:clamp(18px,2.2vw,28px);font-weight:800;line-height:1.05}
+.iv i{font-style:normal;font-family:var(--mono);font-size:clamp(11px,1.1vw,14px);color:var(--dim)}
+.iv:hover{border-color:var(--brass)}
+.iv[disabled]{opacity:.28;cursor:default}
+.iv.right{background:var(--good);border-color:var(--good);color:var(--ink)}
+.iv.right i{color:var(--ink)}
+.iv.wrong{background:var(--miss);border-color:var(--miss);color:var(--ink)}
+.iv.wrong i{color:var(--ink)}
+footer{font-family:var(--mono);font-size:13px;color:var(--dim)}
+@media (max-width:640px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .stage{grid-template-columns:1fr;justify-items:start}
+  .score .stat{align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Name that <span>interval</span></h1>
+    <div class="score" aria-live="polite">
+      <div class="stat"><b id="right">0</b><small>Right</small></div>
+      <div class="stat"><b id="tries">0</b><small>Tries</small></div>
+      <div class="stat"><b id="streak">0</b><small>Streak</small></div>
+    </div>
+  </header>
+
+  <section class="stage">
+    <button class="play" id="play">Play<br>two notes</button>
+    <div class="msg">
+      <div class="big" id="big">Tap play. Listen. Pick the interval.</div>
+      <div class="sub" id="sub">Two notes, low then high.</div>
+      <div class="controls">
+        <button class="pill" id="again">Hear it again</button>
+        <button class="pill" id="easy" aria-pressed="false">Easy set</button>
+        <button class="pill" id="reset">Reset score</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid" id="grid" aria-label="Interval answers"></section>
+
+  <footer>Lessons with David.</footer>
+</div>
+
+<script>
+const IV=[
+ ["Minor 2nd",1,"Jaws"],["Major 2nd",2,"Happy Birthday"],["Minor 3rd",3,"Greensleeves"],["Major 3rd",4,"When the Saints"],
+ ["Perfect 4th",5,"Here Comes the Bride"],["Tritone",6,"The Simpsons"],["Perfect 5th",7,"Star Wars"],["Minor 6th",8,"The Entertainer"],
+ ["Major 6th",9,"My Bonnie"],["Minor 7th",10,"Star Trek theme"],["Major 7th",11,"Pure Imagination"],["Octave",12,"Somewhere Over the Rainbow"]
+];
+const EASY=[4,5,7,12];
+let easy=false, cur=null, root=0, answered=false, right=0, tries=0, streak=0, ctx=null;
+const $=id=>document.getElementById(id);
+const grid=$("grid");
+
+IV.forEach(([name,st,song])=>{
+  const b=document.createElement("button");
+  b.className="iv"; b.id="iv"+st; b.dataset.st=st;
+  b.innerHTML=`<b>${name}</b><i>${st} half step${st>1?"s":""}</i>`;
+  b.onclick=()=>guess(st,b);
+  grid.appendChild(b);
+});
+
+function pool(){return easy?EASY:IV.map(x=>x[1])}
+function refreshGrid(){
+  const p=pool();
+  grid.querySelectorAll(".iv").forEach(b=>{
+    b.classList.remove("right","wrong");
+    b.disabled=!p.includes(+b.dataset.st);
+  });
+}
+function audio(){
+  if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)()}
+  if(ctx.state==="suspended")ctx.resume();
+  return ctx;
+}
+function tone(midi,t){
+  const c=audio(), f=440*Math.pow(2,(midi-69)/12);
+  const out=c.createGain(); out.gain.setValueAtTime(0,t);
+  out.gain.linearRampToValueAtTime(.32,t+.012);
+  out.gain.exponentialRampToValueAtTime(.001,t+1.6);
+  out.connect(c.destination);
+  [[1,1],[2,.45],[3,.22],[4,.12],[5,.06]].forEach(([h,a])=>{
+    const o=c.createOscillator(), g=c.createGain();
+    o.frequency.value=f*h; g.gain.value=a*(h>2?Math.exp(-h*.15):1);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t+1.7);
+  });
+}
+function playPair(){
+  const c=audio(), t=c.currentTime+.05;
+  tone(root,t); tone(root+cur,t+.85);
+}
+function next(){
+  const p=pool(); let n;
+  do{n=p[Math.floor(Math.random()*p.length)]}while(p.length>1&&n===cur);
+  cur=n; root=48+Math.floor(Math.random()*12); answered=false;
+  refreshGrid();
+  $("big").className="big"; $("big").textContent="Listen...";
+  $("sub").textContent="Pick the interval below.";
+  playPair();
+}
+function guess(st,b){
+  if(cur===null||answered){ if(cur===null){ $("big").textContent="Tap play first."; } return; }
+  answered=true; tries++;
+  const ans=IV.find(x=>x[1]===cur);
+  $("iv"+cur).classList.add("right");
+  if(st===cur){right++;streak++;$("big").className="big good";$("big").textContent="Yes! "+ans[0]+".";}
+  else{streak=0;b.classList.add("wrong");$("big").className="big miss";$("big").textContent="That was a "+ans[0]+".";}
+  $("sub").textContent="Think \""+ans[2]+".\" Tap play for the next one.";
+  $("right").textContent=right;$("tries").textContent=tries;$("streak").textContent=streak;
+}
+$("play").onclick=()=>{ if(cur===null||answered) next(); else playPair(); };
+$("again").onclick=()=>{ if(cur!==null) playPair(); };
+$("easy").onclick=e=>{easy=!easy;e.currentTarget.setAttribute("aria-pressed",easy);cur=null;answered=false;refreshGrid();
+  $("big").className="big";$("big").textContent=easy?"Easy set: 3rd, 4th, 5th, octave.":"All twelve intervals.";$("sub").textContent="Tap play to start.";};
+$("reset").onclick=()=>{right=tries=streak=0;["right","tries","streak"].forEach(i=>$(i).textContent=0);};
+refreshGrid();
+</script>
+
+</body></html>

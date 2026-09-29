@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Low E and A · Lessons with David</title>
+<meta name="description" content="Learn the note names on the lowest two guitar strings. Tap to hear them, then quiz yourself.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --ground:#14100D; --panel:#1E1813; --panel-hi:#2A221B;
+    --ivory:#EDE3D0; --muted:#9C8E7B; --brass:#C9A227; --jewel:#D9483B;
+    --good:#5FA85C; --wire:#8C8578;
+  }
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--ground); color:var(--ivory);
+    font-family:"Newsreader",Georgia,serif; font-size:19px; line-height:1.5;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+  h1{font-family:"Saira Condensed",Haettenschweiler,sans-serif;font-weight:700;
+     letter-spacing:.04em;text-transform:uppercase;font-size:2rem;margin:0}
+  .sub{color:var(--muted);margin:2px 0 14px}
+  .forline{color:var(--brass);font-size:1.5rem;margin:0 0 4px;font-weight:500}
+  .msg{color:var(--ivory);font-size:1.15rem;margin:0 0 14px;padding:10px 14px;
+       border-left:3px solid var(--brass);background:var(--panel)}
+  .rack{background:var(--panel);border-radius:6px;padding:14px;margin:0 0 16px}
+  .rack-label{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;
+    letter-spacing:.14em;font-size:.95rem;color:var(--muted);display:block;margin-bottom:10px}
+  .row{display:flex;flex-wrap:wrap;gap:10px}
+  .sw{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.06em;
+    font-size:1.25rem;padding:16px 20px;min-height:58px;border-radius:4px;
+    border:1px solid #3A2A1F;background:var(--panel-hi);color:var(--ivory);cursor:pointer}
+  .sw[aria-pressed="true"]{background:var(--brass);color:#160D0B;border-color:var(--brass);font-weight:700}
+  .sw:active{transform:translateY(1px)}
+
+  /* ---- the neck ---- */
+  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+  .neck{min-width:640px;background:linear-gradient(#241A13,#1A1310);
+        border:1px solid #3A2A1F;border-radius:6px;padding:8px 4px 4px}
+  .fretnums{display:flex;margin:0 0 4px}
+  .fretnums span{flex:1 0 0;text-align:center;font-family:"IBM Plex Mono",monospace;
+    font-size:.9rem;color:var(--muted)}
+  .fretnums span.mark{color:var(--brass)}
+  .string{display:flex;align-items:center;height:72px;position:relative;margin:2px 0}
+  .string::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:var(--wire);opacity:.5}
+  .cell{flex:1 0 0;display:flex;align-items:center;justify-content:center;position:relative;height:100%}
+  .cell:not(:last-child)::after{content:"";position:absolute;right:0;top:4px;bottom:4px;width:2px;background:#4A372A}
+  .dot{width:56px;height:56px;border-radius:50%;border:2px solid transparent;
+    font-family:"Saira Condensed",sans-serif;font-size:1.7rem;font-weight:700;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    background:var(--brass);color:#160D0B;position:relative;z-index:2;padding:0}
+  .dot.open{background:transparent;border-color:var(--brass);color:var(--brass)}
+  .dot.hide{color:transparent}
+  .dot.ask{background:var(--jewel);color:#fff;animation:pulse 1.1s infinite}
+  .dot.right{background:var(--good);color:#0D1A0C}
+  .dot.wrong{background:var(--jewel);color:#fff}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+  .strlabel{font-family:"Saira Condensed",sans-serif;font-size:1.1rem;color:var(--muted);
+    width:42px;flex:0 0 42px;text-align:center}
+
+  /* ---- quiz ---- */
+  #quizbox{display:none}
+  #quizbox.on{display:block}
+  .ask{font-size:1.5rem;margin:0 0 12px;text-align:center}
+  .choices{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .ch{font-family:"Saira Condensed",sans-serif;font-size:2rem;font-weight:700;
+    padding:22px 0;min-height:74px;border-radius:5px;border:2px solid #3A2A1F;
+    background:var(--panel-hi);color:var(--ivory);cursor:pointer}
+  .ch.right{background:var(--good);color:#0D1A0C;border-color:var(--good)}
+  .ch.wrong{background:var(--jewel);color:#fff;border-color:var(--jewel)}
+  .score{display:flex;gap:18px;justify-content:center;margin:14px 0 0;
+    font-family:"IBM Plex Mono",monospace;font-size:1.15rem;color:var(--muted)}
+  .score b{color:var(--brass);font-size:1.4rem}
+  .verdict{text-align:center;font-size:1.35rem;min-height:1.6em;margin:12px 0 0}
+  .tip{color:var(--muted);font-size:1.05rem}
+  footer{margin-top:26px;padding-top:14px;border-top:1px solid #2A221B;
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;color:var(--muted);font-size:.95rem}
+  footer a{color:var(--muted)}
+  @media (max-width:520px){
+    h1{font-size:1.6rem}
+    .choices{grid-template-columns:repeat(2,1fr)}
+    .neck{min-width:560px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Low E and A</h1>
+  <p class="sub">The two fattest strings. No sharps, no flats. Just the letters.</p>
+  <p class="forline" id="forLine" hidden></p>
+  <p class="msg" id="msgLine" hidden></p>
+
+  <div class="rack">
+    <span class="rack-label">Which string</span>
+    <div class="row" id="strRack"></div>
+  </div>
+
+  <div class="rack">
+    <span class="rack-label">What to do</span>
+    <div class="row">
+      <button class="sw" id="mLearn" type="button" aria-pressed="true">Show me</button>
+      <button class="sw" id="mQuiz" type="button" aria-pressed="false">Quiz me</button>
+      <button class="sw" id="snd" type="button" aria-pressed="true">Sound: on</button>
+    </div>
+  </div>
+
+  <div class="scroller">
+    <div class="neck" id="neck"></div>
+  </div>
+
+  <p class="tip" id="tip">Tap any dot to hear it. The hollow ones are open strings, nothing held down.</p>
+
+  <div class="rack" id="quizbox">
+    <p class="ask" id="ask">Tap Quiz me to start.</p>
+    <div class="choices" id="choices"></div>
+    <p class="verdict" id="verdict"></p>
+    <div class="score">
+      <span>Right <b id="sRight">0</b></span>
+      <span>Asked <b id="sAsked">0</b></span>
+      <span>Streak <b id="sStreak">0</b></span>
+    </div>
+  </div>
+
+  <footer>
+    <span>&copy; 2026 David E. Dunavant, M.M. All rights reserved.</span>
+    <span><a href="https://guitarlessonswithdavid.com">guitarlessonswithdavid.com</a></span>
+    <span style="opacity:.6;font-size:.8em">Guitar sounds: FluidR3 GM (CC BY 3.0)</span>
+  </footer>
+</div>
+
+<script>
+/* ---- the notes, naturals only ---- */
+/* open string midi: low E = 40, A = 45. Fret numbers where a natural note falls. */
+var STRINGS=[
+  {id:"E", label:"E", open:40, name:"6th string, low E",
+   notes:[[0,"E"],[1,"F"],[3,"G"],[5,"A"],[7,"B"],[8,"C"],[10,"D"],[12,"E"]]},
+  {id:"A", label:"A", open:45, name:"5th string, A",
+   notes:[[0,"A"],[2,"B"],[3,"C"],[5,"D"],[7,"E"],[8,"F"],[10,"G"],[12,"A"]]}
+];
+var MARKS={3:1,5:1,7:1,9:1,12:1};
+var FRETS=12;
+var S={which:"both", mode:"learn", snd:true};
+
+var q=new URLSearchParams(location.search);
+(function(){
+  var who=q.get("for"), say=q.get("msg");
+  if(who){ var e=document.getElementById("forLine"); e.textContent="For "+who; e.hidden=false; }
+  if(say){ var m=document.getElementById("msgLine"); m.textContent=say; m.hidden=false; }
+  if(q.get("s")==="E"||q.get("s")==="A") S.which=q.get("s");
+})();
+
+/* ---- sound: same plucked string as the fretboard page ---- */
+var ctx=null,cache={};
+/* Real guitar: recorded acoustic steel-string notes (FluidR3 GM, CC BY 3.0), MIDI 36-88,
+   stored in sounds/. Until a note has loaded, or if loading fails, the old plucked-string
+   synth plays instead, so the page is never silent. */
+var SAMPLES={},__sLoading=false;
+function loadSamples(){
+  if(__sLoading||!ctx||!window.fetch) return; __sLoading=true;
+  for(var m=36;m<=88;m++)(function(m){
+    fetch("sounds/"+m+".mp3").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(function(a){ ctx.decodeAudioData(a,function(b){ SAMPLES[m]=b; },function(){}); })
+      .catch(function(){});
+  })(m);
+}
+document.addEventListener("pointerdown",function(){
+  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return; ctx=new AC(); }
+  loadSamples();
+},{passive:true,capture:true});
+
+function fq(m){ return 440*Math.pow(2,(m-69)/12); }
+function buf(m){
+  if(SAMPLES[m])return SAMPLES[m];
+  if(cache[m])return cache[m];
+  var sr=ctx.sampleRate,N=Math.max(2,Math.round(sr/fq(m))),len=Math.floor(sr*2.2);
+  var b=ctx.createBuffer(1,len,sr),d=b.getChannelData(0),p=0;
+  for(var i=0;i<N;i++){ var n=Math.random()*2-1; p=0.55*n+0.45*p; d[i]=p; }
+  for(var j=N;j<len;j++){ d[j]=0.5*(d[j-N]+d[j-N+1])*0.99975; }
+  var a=Math.floor(sr*0.004); for(var k=0;k<a;k++) d[k]*=k/a;
+  cache[m]=b; return b;
+}
+function pluck(m){
+  if(!S.snd)return;
+  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return; ctx=new AC(); }
+  if(ctx.state==="suspended")ctx.resume();
+  loadSamples();
+  var t=ctx.currentTime;
+  var src=ctx.createBufferSource(); src.buffer=buf(m);
+  var real=src.buffer===SAMPLES[m];
+  var f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=real?8000:3400;
+  var g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(real?2.2:0.55,t+0.006);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+2.0);
+  src.connect(f); f.connect(g); g.connect(ctx.destination);
+  src.start(t); src.stop(t+2.1);
+}
+
+/* ---- draw the neck ---- */
+var neck=document.getElementById("neck");
+function shown(){ return STRINGS.filter(function(s){ return S.which==="both"||S.which===s.id; }); }
+function draw(){
+  neck.innerHTML="";
+  var nums=document.createElement("div"); nums.className="fretnums";
+  var pad=document.createElement("span"); pad.style.flex="0 0 42px"; pad.textContent=""; nums.appendChild(pad);
+  for(var f=0;f<=FRETS;f++){
+    var sp=document.createElement("span");
+    sp.textContent=f===0?"open":f;
+    if(MARKS[f])sp.className="mark";
+    nums.appendChild(sp);
+  }
+  neck.appendChild(nums);
+  /* A on top, low E on the bottom, toward the floor, the way it reads on the guitar and in tab */
+  shown().slice().reverse().forEach(function(st){
+    var row=document.createElement("div"); row.className="string";
+    var lab=document.createElement("span"); lab.className="strlabel"; lab.textContent=st.label;
+    row.appendChild(lab);
+    for(var f=0;f<=FRETS;f++){
+      var cell=document.createElement("div"); cell.className="cell";
+      var hit=null;
+      for(var i=0;i<st.notes.length;i++) if(st.notes[i][0]===f) hit=st.notes[i];
+      if(hit){
+        var b=document.createElement("button");
+        b.type="button"; b.className="dot"+(f===0?" open":"");
+        b.textContent=hit[1];
+        b.dataset.str=st.id; b.dataset.fret=f; b.dataset.note=hit[1];
+        b.setAttribute("aria-label",hit[1]+" on the "+st.name+", fret "+f);
+        if(S.mode==="quiz") b.classList.add("hide");
+        b.addEventListener("click",onDot);
+        cell.appendChild(b);
+      }
+      row.appendChild(cell);
+    }
+    neck.appendChild(row);
+  });
+}
+function onDot(){
+  var el=this;   /* `this` is the button here but not inside the filter below */
+  var st=STRINGS.filter(function(x){return x.id===el.dataset.str;})[0];
+  pluck(st.open+(+el.dataset.fret));
+  if(S.mode==="learn"){
+    var t=document.getElementById("tip");
+    t.textContent = el.dataset.fret==="0"
+      ? "That is "+el.dataset.note+", the open "+st.name+". Nothing held down."
+      : "That is "+el.dataset.note+", fret "+el.dataset.fret+" on the "+st.name+".";
+  }
+}
+
+/* ---- string picker ---- */
+var strRack=document.getElementById("strRack");
+[["both","Both"],["E","Low E only"],["A","A only"]].forEach(function(o){
+  var b=document.createElement("button");
+  b.type="button"; b.className="sw"; b.textContent=o[1]; b.dataset.v=o[0];
+  b.addEventListener("click",function(){ S.which=o[0]; syncStr(); draw(); if(S.mode==="quiz")nextQ(); });
+  strRack.appendChild(b);
+});
+function syncStr(){
+  for(var i=0;i<strRack.children.length;i++){
+    var c=strRack.children[i];
+    c.setAttribute("aria-pressed", c.dataset.v===S.which?"true":"false");
+  }
+}
+
+/* ---- modes ---- */
+var bLearn=document.getElementById("mLearn"), bQuiz=document.getElementById("mQuiz");
+function setMode(m){
+  S.mode=m;
+  bLearn.setAttribute("aria-pressed",m==="learn"?"true":"false");
+  bQuiz.setAttribute("aria-pressed",m==="quiz"?"true":"false");
+  document.getElementById("quizbox").classList.toggle("on",m==="quiz");
+  document.getElementById("tip").textContent = m==="learn"
+    ? "Tap any dot to hear it. The hollow ones are open strings, nothing held down."
+    : "Look at the red dot. What note is it?";
+  draw();
+  if(m==="quiz") nextQ();
+}
+bLearn.addEventListener("click",function(){ setMode("learn"); });
+bQuiz.addEventListener("click",function(){ setMode("quiz"); });
+
+var bs=document.getElementById("snd");
+bs.addEventListener("click",function(){
+  S.snd=!S.snd;
+  this.textContent=S.snd?"Sound: on":"Sound: off";
+  this.setAttribute("aria-pressed",S.snd?"true":"false");
+});
+
+/* ---- quiz ---- */
+var right=0,asked=0,streak=0,cur=null,locked=false;
+var LETTERS=["A","B","C","D","E","F","G"];
+function pool(){
+  var out=[];
+  shown().forEach(function(st){ st.notes.forEach(function(n){ out.push({st:st,fret:n[0],note:n[1]}); }); });
+  return out;
+}
+function nextQ(){
+  locked=false;
+  document.getElementById("verdict").textContent="";
+  draw();
+  var p=pool();
+  var pick=p[Math.floor(Math.random()*p.length)];
+  // do not ask the exact same one twice running
+  if(cur && p.length>1){
+    var guard=0;
+    while(pick.st.id===cur.st.id && pick.fret===cur.fret && guard<20){
+      pick=p[Math.floor(Math.random()*p.length)]; guard++;
+    }
+  }
+  cur=pick;
+  var sel=neck.querySelector('.dot[data-str="'+pick.st.id+'"][data-fret="'+pick.fret+'"]');
+  if(sel){ sel.classList.remove("hide"); sel.classList.add("ask"); sel.textContent=""; }
+  document.getElementById("ask").textContent =
+    "What note is the red dot? ("+pick.st.name+")";
+  var opts=[pick.note];
+  while(opts.length<4){
+    var L=LETTERS[Math.floor(Math.random()*7)];
+    if(opts.indexOf(L)<0) opts.push(L);
+  }
+  for(var i=opts.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=opts[i]; opts[i]=opts[j]; opts[j]=t; }
+  var box=document.getElementById("choices"); box.innerHTML="";
+  opts.forEach(function(L){
+    var b=document.createElement("button");
+    b.type="button"; b.className="ch"; b.textContent=L;
+    b.addEventListener("click",function(){ answer(L,b); });
+    box.appendChild(b);
+  });
+}
+function answer(L,btn){
+  if(locked)return; locked=true;
+  asked++;
+  var sel=neck.querySelector('.dot.ask');
+  pluck(cur.st.open+cur.fret);
+  if(L===cur.note){
+    right++; streak++;
+    btn.classList.add("right");
+    if(sel){ sel.classList.remove("ask"); sel.classList.add("right"); sel.textContent=cur.note; }
+    document.getElementById("verdict").textContent="Yes. That is "+cur.note+".";
+  }else{
+    streak=0;
+    btn.classList.add("wrong");
+    if(sel){ sel.classList.remove("ask"); sel.classList.add("wrong"); sel.textContent=cur.note; }
+    var kids=document.getElementById("choices").children;
+    for(var i=0;i<kids.length;i++) if(kids[i].textContent===cur.note) kids[i].classList.add("right");
+    document.getElementById("verdict").textContent="Not quite. That one is "+cur.note+".";
+  }
+  document.getElementById("sRight").textContent=right;
+  document.getElementById("sAsked").textContent=asked;
+  document.getElementById("sStreak").textContent=streak;
+  setTimeout(nextQ,1500);
+}
+
+syncStr(); setMode("learn");
+</script>
+</body>
+</html>
