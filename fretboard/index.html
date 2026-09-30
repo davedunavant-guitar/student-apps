@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fretboard · Lessons with David</title>
 <meta name="description" content="Pick a key and a scale. The shape lights up on the neck. Tap any note to hear it.">
+<meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -84,6 +85,8 @@
   .r{background:var(--jewel)} .c{background:var(--ivory);box-shadow:0 0 0 2px var(--brass)} .s{background:var(--ivory)}
   .tip{font-size:.95rem;color:var(--muted);max-width:62ch;margin:0}
   #teacher{border:1px dashed #3A2A1F;border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  /* the id rule above beats the plain hidden attribute, so say it again louder */
+  #teacher[hidden]{display:none}
   #teacher .rack-label{color:var(--brass)}
   #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--brass);color:#160D0B;font-family:"Saira Condensed",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.12em;padding:12px 20px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -137,7 +140,7 @@
   </section>
 
   <footer>
-    <span>David E. Dunavant, M.M.</span>
+    <span>&copy; 2026 David E. Dunavant, M.M. All rights reserved.</span>
     <span><a href="https://guitarlessonswithdavid.com">guitarlessonswithdavid.com</a></span>
     <span style="opacity:.6;font-size:.8em">Guitar sounds: FluidR3 GM (CC BY 3.0)</span>
   </footer>
@@ -149,16 +152,19 @@
 "use strict";
 var SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var FLAT=["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
-var FLATKEY={5:1,10:1,3:1,8:1,1:1,6:1};
+var LET="CDEFGAB", BASE={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 
 var SCALES=[
  {id:"minpent",n:"Minor Pentatonic",st:[0,3,5,7,10],dg:["1","b3","4","5","b7"],ch:[0,3,7],w:"The blues box. Five notes, no wrong turns."},
  {id:"blues",n:"Blues",st:[0,3,5,6,7,10],dg:["1","b3","4","b5","5","b7"],ch:[0,3,7],w:"Pentatonic plus the flat five. That one note is the grit."},
  {id:"majpent",n:"Major Pentatonic",st:[0,2,4,7,9],dg:["1","2","3","5","6"],ch:[0,4,7],w:"Country and Southern rock live here."},
+ {id:"majblues",n:"Major Blues",st:[0,2,3,4,7,9],dg:["1","2","b3","3","5","6"],ch:[0,4,7],w:"Major pentatonic with the b3 slipped in. That b3 to 3 slide is the sound."},
  {id:"major",n:"Major",st:[0,2,4,5,7,9,11],dg:["1","2","3","4","5","6","7"],ch:[0,4,7],w:"Bright and settled. Everything else is measured against this."},
  {id:"minor",n:"Natural Minor",st:[0,2,3,5,7,8,10],dg:["1","2","b3","4","5","b6","b7"],ch:[0,3,7],w:"Same notes as its relative major, different home base."},
  {id:"dorian",n:"Dorian",st:[0,2,3,5,7,9,10],dg:["1","2","b3","4","5","6","b7"],ch:[0,3,7],w:"Minor with a raised sixth. Santana, funk, half of jazz."},
  {id:"mixo",n:"Mixolydian",st:[0,2,4,5,7,9,10],dg:["1","2","3","4","5","6","b7"],ch:[0,4,7],w:"Major with a flat seven. The dominant chord sound."},
+ {id:"lydian",n:"Lydian",st:[0,2,4,6,7,9,11],dg:["1","2","3","#4","5","6","7"],ch:[0,4,7],w:"Major with a raised fourth. Floating, wide open, film music."},
+ {id:"phrygian",n:"Phrygian",st:[0,1,3,5,7,8,10],dg:["1","b2","b3","4","5","b6","b7"],ch:[0,3,7],w:"Minor with a flat second. Flamenco and metal both live on that b2."},
  {id:"harmmin",n:"Harmonic Minor",st:[0,2,3,5,7,8,11],dg:["1","2","b3","4","5","b6","7"],ch:[0,3,7],w:"That jump from b6 up to 7 is the whole flavour."}
 ];
 var TUNINGS=[
@@ -175,7 +181,10 @@ var S={root:9,scale:"minpent",tuning:"std",deg:false,snd:true};
 var q=new URLSearchParams(location.search);
 (function(){
   var k=q.get("k");
-  if(k){ var i=SHARP.indexOf(k); if(i<0)i=FLAT.indexOf(k); if(i>=0)S.root=i; }
+  if(k && BASE[k.charAt(0).toUpperCase()]!==undefined){
+    var kk=k.charAt(0).toUpperCase()+k.slice(1).replace(/s/g,"#");
+    S.root=pcOf(kk);
+  }
   if(q.get("s")&&SCALES.some(function(x){return x.id===q.get("s")})) S.scale=q.get("s");
   if(q.get("t")&&TUNINGS.some(function(x){return x.id===q.get("t")})) S.tuning=q.get("t");
   if(q.get("l")==="d") S.deg=true;
@@ -183,12 +192,69 @@ var q=new URLSearchParams(location.search);
   if(who){ var e=document.getElementById("forLine"); e.textContent="For "+who; e.hidden=false; document.getElementById("who").value=who; }
   if(say){ var m=document.getElementById("msgLine"); m.textContent=say; m.hidden=false; document.getElementById("say").value=say; }
   // A link built for a student hides the teacher panel. David's blank page keeps it.
-  if(q.get("k")||q.get("s")||who||say) document.getElementById("teacher").hidden=true;
+  /* Teacher panel is OFF for everyone by default. It only appears on a device
+     David has unlocked once with ?teach=1, remembered in that browser.
+     Students, parents and anyone handed the plain link never see it. */
+  (function(){
+    var on=false;
+    try{
+      var t=q.get("teach");
+      if(t==="1") localStorage.setItem("lwd_teach","1");
+      if(t==="0") localStorage.removeItem("lwd_teach");
+      on = localStorage.getItem("lwd_teach")==="1";
+    }catch(e){ on = q.get("teach")==="1"; }
+    document.getElementById("teacher").hidden = !on;
+  })();
 })();
 
 function sc(){ for(var i=0;i<SCALES.length;i++) if(SCALES[i].id===S.scale) return SCALES[i]; return SCALES[0]; }
 function tu(){ for(var i=0;i<TUNINGS.length;i++) if(TUNINGS[i].id===S.tuning) return TUNINGS[i]; return TUNINGS[0]; }
-function nm(pc){ return (FLATKEY[S.root]?FLAT:SHARP)[pc]; }
+/* ---- note spelling ----
+   A scale takes one letter per degree: C Phrygian is C Db Eb F G Ab Bb,
+   never C C# D#. The old code picked sharps or flats from the root alone
+   and never looked at the scale, so 36 of the 84 key+scale pairs were
+   spelled wrong. Letters come from the degree number ("b3" is a third, so
+   the third letter up); the accidental is whatever makes the pitch right. */
+function accOf(n){ var a=0; for(var i=1;i<n.length;i++){ a += n.charAt(i)==="#"?1:-1; } return a; }
+function pcOf(n){ return ((BASE[n.charAt(0)]+accOf(n))%12+12)%12; }
+function spellFrom(rootName,s){
+  var li=LET.indexOf(rootName.charAt(0)), rpc=pcOf(rootName), out=[];
+  for(var i=0;i<s.dg.length;i++){
+    var num=parseInt(s.dg[i].replace(/[^0-9]/g,""),10);
+    var L=LET.charAt((li+num-1)%7), want=(rpc+s.st[i])%12;
+    var d=((want-BASE[L])%12+12)%12; if(d>6) d-=12;
+    var a=""; for(var k=0;k<Math.abs(d);k++) a+= d>0?"#":"b";
+    out.push(L+a);
+  }
+  return out;
+}
+/* Of the two ways to name the root, keep the friendlier one: fewest
+   accidentals, never a double sharp or double flat. */
+function spellScale(rootPc,s){
+  var tries=[SHARP[rootPc]], best=null;
+  if(FLAT[rootPc]!==SHARP[rootPc]) tries.push(FLAT[rootPc]);
+  for(var i=0;i<tries.length;i++){
+    var names=spellFrom(tries[i],s), bad=0, n=0;
+    for(var j=0;j<names.length;j++){ var a=Math.abs(accOf(names[j])); if(a>1) bad++; if(a) n++; }
+    var sk=bad?9900+n:n, pref=tries[i].indexOf("b")>=0?0:1;
+    if(!best || sk<best.sk || (sk===best.sk && pref<best.pref)) best={sk:sk,pref:pref,names:names,root:tries[i]};
+  }
+  return best;
+}
+var SPELL={names:[],root:"C",map:null,fall:SHARP};
+function reSpell(){
+  var s=sc(), b=spellScale(S.root,s), m={};
+  for(var i=0;i<b.names.length;i++) m[(S.root+s.st[i])%12]=b.names[i];
+  var flat=false;
+  for(var j=0;j<b.names.length;j++) if(b.names[j].indexOf("b")>=0) flat=true;
+  SPELL={names:b.names, root:b.root, map:m, fall:(flat?FLAT:SHARP)};
+}
+/* in-scale notes get the proper spelling; notes outside it follow the
+   scale's own leaning so the board never mixes sharps and flats */
+function nm(pc){ if(SPELL.map && SPELL.map[pc]) return SPELL.map[pc]; return SPELL.fall[pc]; }
+function rootNm(){ return SPELL.root; }
+/* the share link must survive a round trip, so it carries a plain name */
+function canon(pc){ return SPELL.fall[pc]; }
 
 /* ---- geometry: real 25.5 inch scale, works both ways round ---- */
 function fd(n){ return 1-Math.pow(2,-n/12); }
@@ -277,6 +343,7 @@ function build(){
 function flash(el){ el.classList.remove("ring"); void el.offsetWidth; el.classList.add("ring"); }
 
 function paint(){
+  reSpell();
   var s=sc(), map={}, ch={};
   s.st.forEach(function(x,i){ map[(S.root+x)%12]=s.dg[i]; });
   s.ch.forEach(function(x){ ch[(S.root+x)%12]=1; });
@@ -292,11 +359,11 @@ function paint(){
     b.textContent=txt;
     b.setAttribute("aria-label",nm(pc)+(d?", degree "+d:", outside the key"));
   });
-  var notes=s.st.map(function(x){return nm((S.root+x)%12);}).join("  ");
+  var notes=SPELL.names.join("  ");
   document.getElementById("readout").innerHTML=
-    cell("Showing",nm(S.root)+" "+s.n)+cell("Notes",notes)+cell("Degrees",s.dg.join("  "))+cell("Why it works",s.w,true);
+    cell("Showing",rootNm()+" "+s.n)+cell("Notes",notes)+cell("Degrees",s.dg.join("  "))+cell("Why it works",s.w,true);
   document.getElementById("tuneTag").textContent=tu().n+" · "+tu().lab;
-  document.title=nm(S.root)+" "+s.n+" · Fretboard";
+  document.title=rootNm()+" "+s.n+" · Fretboard";
 }
 function cell(k,v,prose){ return '<div class="cell"><dt>'+k+'</dt><dd class="'+(prose?"prose":"")+'">'+v+'</dd></div>'; }
 
@@ -394,7 +461,9 @@ for(var pc=0;pc<12;pc++){(function(p){
   b.addEventListener("click",function(){ S.root=p; syncK(); paint(); pluck(48+p); });
   keysEl.appendChild(b);
 })(pc);}
-function syncK(){ for(var i=0;i<keysEl.children.length;i++){ var c=keysEl.children[i],p=+c.dataset.pc; c.textContent=nm(p); c.setAttribute("aria-pressed",p===S.root?"true":"false"); } }
+function syncK(){ reSpell();
+  for(var i=0;i<keysEl.children.length;i++){ var c=keysEl.children[i],p=+c.dataset.pc;
+  c.textContent=(p===S.root?rootNm():SPELL.fall[p]); c.setAttribute("aria-pressed",p===S.root?"true":"false"); } }
 
 var scEl=document.getElementById("scales");
 SCALES.forEach(function(x){ var b=document.createElement("button"); b.type="button"; b.className="sc"; b.dataset.id=x.id; b.textContent=x.n;
@@ -416,7 +485,7 @@ document.getElementById("snd").addEventListener("click",function(){
 /* ---- the share button: this is the whole point ---- */
 document.getElementById("share").addEventListener("click",function(){
   var p=new URLSearchParams();
-  p.set("k",nm(S.root)); p.set("s",S.scale);
+  p.set("k",canon(S.root)); p.set("s",S.scale);
   if(S.tuning!=="std")p.set("t",S.tuning);
   if(S.deg)p.set("l","d");
   var who=document.getElementById("who").value.trim(), say=document.getElementById("say").value.trim();
