@@ -36,7 +36,7 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(44px,9vw,64px);lin
 .chord svg{width:110px;height:auto;color:var(--ink)}
 .chord b{font-family:var(--display);font-weight:800;font-size:56px;line-height:1}
 
-.picker{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.picker{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .pick{appearance:none;border:3px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px 8px;min-height:84px;cursor:pointer;font-family:var(--body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
 .pick .n{font-family:var(--display);font-weight:800;font-size:28px;line-height:1;white-space:nowrap}
 .pick .a{font-size:20px;letter-spacing:.02em;color:var(--muted)}
@@ -127,7 +127,8 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
   <div class="picker" role="group" aria-label="Pick a strum pattern">
     <button class="pick" id="pick1" data-mode="1" aria-pressed="true"><span class="n">Pattern 1</span><span class="a">↓ ↓↑ ↓ ↓↑</span></button>
     <button class="pick" id="pick2" data-mode="2" aria-pressed="false"><span class="n">Pattern 2</span><span class="a">↓ ↓↑↓↑↓↑</span></button>
-    <button class="pick" id="pickB" data-mode="both" aria-pressed="false"><span class="n">Both</span><span class="a">2 bars each</span></button>
+    <button class="pick" id="pick3" data-mode="3" aria-pressed="false"><span class="n">Pattern 3</span><span class="a">↓ ↓↑ ↑↓↑</span></button>
+    <button class="pick" id="pickB" data-mode="both" aria-pressed="false"><span class="n">All 3</span><span class="a">2 bars each</span></button>
   </div>
 
   <section class="card" aria-live="off">
@@ -165,7 +166,9 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
   var COUNTS=['1','&','2','&','3','&','4','&'];
   var P={
     1:{hits:[1,0,1,1,1,0,1,1],notes:['q',null,'e1','e2','q',null,'e1','e2']},
-    2:{hits:[1,0,1,1,1,1,1,1],notes:['q',null,'e1','e2','e1','e2','e1','e2']}
+    2:{hits:[1,0,1,1,1,1,1,1],notes:['q',null,'e1','e2','e1','e2','e1','e2']},
+    // Beat 3 is tied to the & of 2: hold it, do not strum it (book, page with the tie).
+    3:{hits:[1,0,1,1,0,1,1,1],notes:['q',null,'e1','e2','e1','e2','e1','e2'],tie:[3,4]}
   };
   var FREQS=[98.00,123.47,146.83,196.00,293.66,392.00]; // G chord 320033, low to high
   // Real guitar: recorded steel-string notes for the same six strings (FluidR3 GM, CC BY 3.0).
@@ -194,6 +197,7 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
       s+='<line x1="'+(x+12.5)+'" y1="80" x2="'+(x+12.5)+'" y2="10" stroke="currentColor" stroke-width="3.5"/>';
       if(n==='e1') s+='<rect x="'+(x+10.75)+'" y="8" width="103.5" height="11" fill="currentColor"/>';
     }
+    if(p.tie){ var a=50+100*p.tie[0], b=50+100*p.tie[1]; s+='<path d="M'+(a+4)+' 96 Q'+((a+b)/2)+' 112 '+(b-4)+' 96" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>'; }
     notation.innerHTML=s;
     var h='';
     for(var i=0;i<8;i++){
@@ -257,7 +261,7 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
     g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
     o.connect(g); g.connect(master); o.start(t); o.stop(t+0.08);
   }
-  function patternFor(bar){ return mode==='both' ? (Math.floor(bar/2)%2?2:1) : mode; }
+  function patternFor(bar){ return mode==='both' ? (Math.floor(bar/2)%3)+1 : mode; }
   function scheduleSlot(i,t){
     if(i<8){ if(i%2===0){ click(t,i===0); queue.push({t:t,count:true,beat:i/2+1}); } return; }
     var m=i-8, bar=Math.floor(m/8), s=m%8, pk=patternFor(bar);
@@ -308,7 +312,7 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
     overlay.hidden=true; hl.hidden=true;
     if(lastCol) lastCol.classList.remove('on','hit'); lastCol=null;
     renderPattern(mode==='both'?1:mode);
-    $('status').textContent= mode==='both' ? 'Both patterns' : 'Pattern '+mode;
+    $('status').textContent= mode==='both' ? 'All 3 patterns' : 'Pattern '+mode;
     $('next').textContent='Press Start';
     var go=$('go'); go.textContent='START'; go.classList.remove('stop');
     if(wake){ try{wake.release();}catch(e){} wake=null; }
@@ -317,11 +321,12 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
   // ---------- controls ----------
   function setMode(m){
     mode=m;
-    ['pick1','pick2','pickB'].forEach(function(id){ var b=$(id); b.setAttribute('aria-pressed', String(b.dataset.mode===String(m))); });
-    if(!running){ renderPattern(m==='both'?1:m); $('status').textContent= m==='both' ? 'Both patterns' : 'Pattern '+m; }
+    ['pick1','pick2','pick3','pickB'].forEach(function(id){ var b=$(id); b.setAttribute('aria-pressed', String(b.dataset.mode===String(m))); });
+    if(!running){ renderPattern(m==='both'?1:m); $('status').textContent= m==='both' ? 'All 3 patterns' : 'Pattern '+m; }
   }
   $('pick1').onclick=function(){setMode(1)};
   $('pick2').onclick=function(){setMode(2)};
+  $('pick3').onclick=function(){setMode(3)};
   $('pickB').onclick=function(){setMode('both')};
 
   function setBpm(v){
