@@ -116,7 +116,7 @@ footer{font-size:20px;color:var(--dim)}
     <p class="note" id="rules"></p>
   </section>
 
-  <footer>Lessons with David.</footer>
+  <footer>Lessons with David.<br><span style="opacity:.7">Guitar sounds: tonejs-instruments, public domain recordings (CC BY 3.0)</span></footer>
 </div>
 
 <script>
@@ -201,10 +201,10 @@ function renderShapes(){
     ? "Minor: the <strong>3rd moved down one fret</strong>. Everything else stayed put. Tap a shape to hear it."
     : "Learn each shape by the string the root is on. Tap a shape to hear it.";
   var sp=spell(S.pc,S.minor), box=document.getElementById("cards"); box.innerHTML="";
-  allShapes(S.pc,S.minor).forEach(function(o){
+  SHAPES.map(function(sh){ return {sh:sh,fr:shapeFrets(S.pc,sh,S.minor)}; }).forEach(function(o){
     var w=windowFor(o.fr), b=document.createElement("button");
     b.type="button"; b.className="card";
-    b.innerHTML='<h2>Root on the '+ROOT_STRING[o.sh.id]+' string</h2><div class="inv">'+o.sh.inv+'</div>'+
+    b.innerHTML='<h2>'+o.sh.inv+'</h2><div class="inv">Root on the '+ROOT_STRING[o.sh.id]+' string</div>'+
       diagram(o.fr,o.sh.order,S.minor,w.start,w.span)+
       '<div class="notes">Notes: '+o.sh.order.map(function(t){return sp[t];}).join(" &nbsp;")+'</div><div class="hear">&#9654; Tap to hear</div>';
     b.addEventListener("click",function(){ strum(o.fr); glow(b); });
@@ -272,22 +272,38 @@ document.getElementById("playAll").addEventListener("click",function(){
 });
 function glow(el){ el.classList.add("ring"); setTimeout(function(){ el.classList.remove("ring"); },900); }
 
-/* ---------- sound: real recorded guitar notes, same engine as the Fretboard app ----------
-   Acoustic steel-string notes (FluidR3 GM, CC BY 3.0), MIDI 55-81 in sounds/.
+/* ---------- sound ----------
+   Real recorded acoustic guitar notes (tonejs-instruments "guitar-acoustic", from public
+   domain recordings, CC BY 3.0), G3 to D5 in sounds/. The four notes above D5 are the D5
+   recording played a little faster. A small room, a slightly uneven strum and the last
+   chord damped when the next one starts keep it from sounding like a machine.
    Until a note has loaded, a plucked-string synth plays so the page is never silent. */
-var ctx=null,cache={},SAMPLES={},__sLoading=false;
+var LOW=55, HIGH=74;
+var ctx=null,cache={},SAMPLES={},__sLoading=false,bus=null,ringing=[];
 function loadSamples(){
   if(__sLoading||!ctx||!window.fetch) return; __sLoading=true;
-  for(var m=55;m<=81;m++)(function(m){
+  for(var m=LOW;m<=HIGH;m++)(function(m){
     fetch("sounds/"+m+".mp3").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
       .then(function(a){ ctx.decodeAudioData(a,function(b){ SAMPLES[m]=b; },function(){}); })
       .catch(function(){});
   })(m);
 }
+/* the room: a short, soft reflection tail mixed in quietly */
+function makeBus(){
+  var out=ctx.createGain(); out.gain.value=1; out.connect(ctx.destination);
+  var dry=ctx.createGain(); dry.gain.value=1; dry.connect(out);
+  var sr=ctx.sampleRate,len=Math.floor(sr*1.3),ir=ctx.createBuffer(2,len,sr);
+  for(var c=0;c<2;c++){ var d=ir.getChannelData(c); for(var i=0;i<len;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2)*(i<sr*0.012?i/(sr*0.012):1); } }
+  var verb=ctx.createConvolver(); verb.buffer=ir;
+  var tone=ctx.createBiquadFilter(); tone.type="lowpass"; tone.frequency.value=4200;
+  var wet=ctx.createGain(); wet.gain.value=0.16;
+  dry.connect(verb); verb.connect(tone); tone.connect(wet); wet.connect(out);
+  return dry;
+}
 try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
 var __unlocked=false;
 function ensureAudio(){
-  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false; ctx=new AC(); }
+  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false; ctx=new AC(); bus=makeBus(); }
   if(ctx.state!=="running"){ try{ ctx.resume(); }catch(e){} }
   loadSamples();
   if(!__unlocked){
@@ -308,8 +324,7 @@ function ensureAudio(){
 document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ctx&&ctx.state!=="running"){ try{ctx.resume();}catch(e){} } });
 
 function fq(m){ return 440*Math.pow(2,(m-69)/12); }
-function buf(m){
-  if(SAMPLES[m])return SAMPLES[m];
+function synth(m){
   if(cache[m])return cache[m];
   var sr=ctx.sampleRate,N=Math.max(2,Math.round(sr/fq(m))),len=Math.floor(sr*2.2);
   var b=ctx.createBuffer(1,len,sr),d=b.getChannelData(0),p=0;
@@ -318,26 +333,33 @@ function buf(m){
   var a=Math.floor(sr*0.004); for(var k=0;k<a;k++) d[k]*=k/a;
   cache[m]=b; return b;
 }
-function pluck(m,when){
-  if(!ensureAudio())return;
-  var t=when||ctx.currentTime;
-  var src=ctx.createBufferSource(); src.buffer=buf(m);
-  var real=src.buffer===SAMPLES[m];
-  var f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=real?8000:3400;
-  var g=ctx.createGain();
+function pluck(m,t,vel){
+  var src=ctx.createBufferSource(), base=Math.min(m,HIGH), real=!!SAMPLES[base];
+  if(real){ src.buffer=SAMPLES[base]; src.playbackRate.value=Math.pow(2,(m-base)/12); }
+  else src.buffer=synth(m);
+  var g=ctx.createGain(), peak=(real?0.75:0.35)*vel;
   g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(real?2.2:0.4,t+0.006);
-  /* let the recorded note ring out (the files are about 3 seconds long), then fade */
-  g.gain.exponentialRampToValueAtTime(real?2.0:0.2,t+1.8);
-  g.gain.exponentialRampToValueAtTime(0.0008,t+3.1);
-  src.connect(f); f.connect(g); g.connect(ctx.destination);
-  src.start(t); src.stop(t+3.15);
+  g.gain.exponentialRampToValueAtTime(peak,t+0.004);
+  g.gain.setValueAtTime(peak,t+3.2);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+4.0);
+  src.connect(g); g.connect(bus);
+  src.start(t); src.stop(t+4.05);
+  ringing.push({g:g,src:src,end:t+4.05});
 }
-/* A gentle down-strum: G string first, then B, then E, 45 ms apart. */
+/* a fretting hand lifts off when it changes chords: damp what is still ringing */
+function damp(t){
+  ringing.forEach(function(n){ if(n.end>t){ try{ n.g.gain.cancelScheduledValues(t); n.g.gain.setValueAtTime(n.g.gain.value||0.3,t); n.g.gain.exponentialRampToValueAtTime(0.0008,t+0.09); n.src.stop(t+0.1); }catch(e){} } });
+  ringing=[];
+}
+/* a down-strum: G string first, then B, then E, a little uneven like a real hand */
 function strum(fr){
   if(!ensureAudio())return;
-  var t=ctx.currentTime+0.03;
-  for(var s=0;s<3;s++) pluck(OPEN[s]+fr[s],t+s*0.045);
+  var t=ctx.currentTime+0.03; damp(t);
+  var at=t;
+  for(var s=0;s<3;s++){
+    pluck(OPEN[s]+fr[s],at,(s===0?1:0.86)*(0.92+Math.random()*0.08));
+    at+=0.032+Math.random()*0.022;
+  }
 }
 window.__triads={shapeFrets:shapeFrets,allShapes:allShapes,spell:spell,songChords:songChords,S:S,renderSong:renderSong};
 
