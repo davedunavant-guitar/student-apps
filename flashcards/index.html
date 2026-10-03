@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Extension Flashcards</title>
+<meta name="apple-mobile-web-app-title" content="Flashcards">
+<link rel="icon" href="../favicon.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --ink:#0E1420; --panel:#182235; --panel2:#1F2B42; --line:#2C3A56;
+  --brass:#D2AE63; --ivory:#F3EEE4; --dim:#9AA6BD;
+  --good:#5CC592; --miss:#E57C62;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--ink);color:var(--ivory);font-family:var(--display);margin:0;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:900px;margin:0 auto;padding:clamp(16px,3vw,36px) 16px;display:flex;flex-direction:column;gap:clamp(16px,2.4vw,26px);min-height:100%}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+h1{font-size:clamp(30px,5vw,56px);font-weight:800;line-height:1;margin:0;text-wrap:balance}
+h1 span{color:var(--brass)}
+.left{font-family:var(--mono);font-size:clamp(18px,2.2vw,24px);color:var(--dim)}
+.left b{color:var(--ivory)}
+.card{position:relative;width:100%;min-height:clamp(300px,46vh,440px);border:none;padding:0;background:none;cursor:pointer;perspective:1400px;font:inherit;color:inherit}
+.card:focus-visible{outline:4px solid var(--ivory);outline-offset:4px;border-radius:26px}
+.inner{position:absolute;inset:0;transition:transform .45s ease;transform-style:preserve-3d}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:26px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:clamp(20px,4vw,44px);text-align:center}
+.front{background:var(--panel);border:3px solid var(--line)}
+.back{background:var(--ivory);color:var(--ink);transform:rotateY(180deg);border:3px solid var(--brass)}
+.tag{font-family:var(--mono);font-size:clamp(14px,1.6vw,18px);letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.back .tag{color:#8A6A24}
+.q{font-size:clamp(32px,5.6vw,60px);font-weight:800;line-height:1.1;text-wrap:balance}
+.a{font-size:clamp(30px,5vw,54px);font-weight:800;line-height:1.12;text-wrap:balance}
+.a small{display:block;font-size:.55em;font-weight:500;margin-top:14px;line-height:1.3}
+.hint{font-size:clamp(18px,2vw,22px);color:var(--dim)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.big{border:none;border-radius:20px;min-height:84px;font:800 clamp(24px,3vw,32px)/1.1 var(--display);cursor:pointer;padding:14px}
+.big:focus-visible,.pill:focus-visible{outline:4px solid var(--ivory);outline-offset:3px}
+.big:active{transform:scale(.98)}
+.got{background:var(--good);color:var(--ink)}
+.not{background:var(--miss);color:var(--ink)}
+.flip{background:var(--brass);color:var(--ink);grid-column:1/-1}
+.pill{justify-self:center;border:2px solid var(--line);background:var(--panel2);color:var(--ivory);border-radius:999px;padding:14px 26px;font:500 clamp(18px,2vw,22px) var(--display);cursor:pointer}
+.done{background:var(--panel);border:3px solid var(--good);border-radius:26px;padding:clamp(24px,4vw,44px);text-align:center;display:flex;flex-direction:column;gap:18px;align-items:center}
+.done h2{margin:0;font-size:clamp(34px,5vw,56px)}
+.done p{margin:0;font-size:clamp(20px,2.4vw,26px);color:var(--dim)}
+footer{margin-top:auto;font-family:var(--mono);font-size:16px;color:var(--dim);line-height:1.6}
+footer a{color:inherit;font-weight:800;text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.inner{transition:none}}
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <h1>Extension <span>Flashcards</span></h1>
+    <div class="left" id="left" aria-live="polite"></div>
+  </header>
+
+  <div id="play">
+    <button class="card" id="card" aria-label="Flashcard. Tap to flip.">
+      <div class="inner">
+        <div class="face front"><div class="tag" id="tagF"></div><div class="q" id="q"></div><div class="hint">Say it out loud. Then tap to flip.</div></div>
+        <div class="face back"><div class="tag" id="tagB"></div><div class="a" id="a"></div></div>
+      </div>
+    </button>
+    <div class="btns" id="btns" style="margin-top:18px"></div>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <h2>You got them all!</h2>
+    <p>Every card, right. Go play it on the guitar.</p>
+    <button class="big flip" id="again" style="width:100%">Start over</button>
+  </div>
+
+  <button class="pill" id="restart">Shuffle and start over</button>
+
+  <footer>Street Guitar Book 2, Chapter 1 · Lessons with David · <a href="https://guitarlessonswithdavid.com">guitarlessonswithdavid.com</a></footer>
+</div>
+
+<script>
+/* David's red facts from Book 2, Chapter 1, up to the fret distances page.
+   No b9 / #9 cards, at his word (2026-10-03). */
+const CARDS=[
+ ["Minor","How do you make a chord minor?","Move the 3rd down one fret<small>(a half step)</small>"],
+ ["Same note","2 is the same note as...","9"],
+ ["Same note","4 is the same note as...","11"],
+ ["Same note","6 is the same note as...","13"],
+ ["Same note","9 is the same note as...","2"],
+ ["Same note","11 is the same note as...","4"],
+ ["Same note","13 is the same note as...","6"],
+ ["Triads","An augmented triad has...","A sharp 5th<small>(#5, the 5th up one fret)</small>"],
+ ["Triads","A diminished triad is...","A minor chord with a flat 5th"],
+ ["sus chords","sus2 or sus4 means...","DON'T PLAY THE 3rd<small>The 2 or the 4 takes its place, then usually goes back to the 3rd.</small>"],
+ ["The 11","When do you use the 11?","Only with a minor chord.<small>Never with a major chord.</small>"],
+ ["Progression","I IV I V I in the key of G","G  C  G  D  G"],
+ ["Frets away","The 9 (or 2) is...","2 frets up from the root"],
+ ["Frets away","The major 7 is...","1 fret below the root"],
+ ["Frets away","The 7 (dominant and minor 7th chords) is...","2 frets below the root"],
+ ["Frets away","The sus2 is...","2 frets below the 3rd"],
+ ["Frets away","The sus4 is...","1 fret above the 3rd<small>(of a major chord)</small>"],
+ ["Frets away","The 11 (or 4) is...","2 frets below the 5th"],
+ ["Frets away","The 6 (or 13) is...","2 frets above the 5th"],
+ ["Replace","Replace the ROOT with...","Below: major 7 or 7<small>Above: 9</small>"],
+ ["Replace","Replace the 3rd with...","Below: sus2<small>Above: sus4</small>"],
+ ["Replace","Replace the 5th with...","Below: 11<small>Above: 6 (13) or 7</small>"]
+];
+const $=id=>document.getElementById(id);
+let deck=[], cur=null, flipped=false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function start(){
+  deck=shuffle(CARDS.map((c,i)=>i));
+  $("done").hidden=true; $("play").hidden=false; $("restart").hidden=false;
+  show();
+}
+function show(){
+  if(!deck.length){ $("play").hidden=true; $("restart").hidden=true; $("done").hidden=false; $("left").textContent=""; return; }
+  cur=deck[0]; const [tag,q,a]=CARDS[cur];
+  $("tagF").textContent=tag; $("tagB").textContent=tag;
+  $("q").textContent=q; $("a").innerHTML=a;
+  setFlip(false);
+  $("left").innerHTML="<b>"+deck.length+"</b> left of "+CARDS.length;
+}
+function setFlip(f){
+  flipped=f; $("card").classList.toggle("flipped",f);
+  $("card").setAttribute("aria-label", f ? "Answer: "+$("a").textContent+". Tap to flip back." : "Question: "+$("q").textContent+". Tap to flip.");
+  const b=$("btns");
+  b.innerHTML = f
+    ? '<button class="big not" id="not">Not yet</button><button class="big got" id="got">Got it</button>'
+    : '<button class="big flip" id="fl">Flip it</button>';
+  if(f){ $("got").onclick=()=>{deck.shift(); show();};
+         $("not").onclick=()=>{ /* comes back a few cards later */
+           deck.shift(); deck.splice(Math.min(3,deck.length),0,cur); show(); }; }
+  else $("fl").onclick=()=>setFlip(true);
+}
+$("card").onclick=()=>setFlip(!flipped);
+$("restart").onclick=start; $("again").onclick=start;
+start();
+</script>
+</body></html>
