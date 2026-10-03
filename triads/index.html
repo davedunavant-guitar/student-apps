@@ -28,7 +28,7 @@ h1 span{color:var(--brass)}
 button{font:inherit;cursor:pointer;color:var(--ivory)}
 button:focus-visible{outline:3px solid var(--ivory);outline-offset:3px}
 
-.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tab{min-height:72px;border-radius:18px;border:2px solid var(--line);background:var(--panel);font-size:clamp(22px,2.4vw,28px);font-weight:800;padding:10px}
 .tab[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:var(--ink)}
 
@@ -59,7 +59,8 @@ svg{width:100%;height:auto;display:block}
 .chip small{display:block;font-size:clamp(19px,1.8vw,22px);color:var(--dim);margin-top:4px;font-weight:500}
 .chip[aria-current="true"]{background:var(--brass);border-color:var(--brass);color:var(--ink)}
 .chip[aria-current="true"] small{color:var(--ink)}
-.pos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pos .q{font-size:clamp(20px,2.4vw,28px);line-height:1.15;padding:6px 4px;overflow-wrap:anywhere}
 .big{min-height:84px;border-radius:20px;border:none;background:var(--brass);color:var(--ink);font-size:clamp(26px,3vw,34px);font-weight:800}
 .go{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .ghost{background:var(--panel2);color:var(--ivory);border:2px solid var(--line)}
@@ -77,13 +78,17 @@ footer{font-size:20px;color:var(--dim)}
 .dot circle{transition:fill .5s}
 .dot.glowing circle{stroke:#fff;stroke-width:5;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{stroke-opacity:.15}}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stp{min-height:72px;border-radius:16px;border:2px solid var(--line);background:var(--panel);font-size:clamp(19px,2vw,24px);font-weight:800;line-height:1.15;padding:8px 4px;color:var(--dim)}
+.stp[aria-current="true"]{background:var(--ivory);border-color:var(--ivory);color:var(--ink)}
+.stp.done{color:var(--third);border-color:var(--third)}
 .strings{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .strings button{min-height:84px;border-radius:20px;border:2px solid var(--line);background:var(--panel2);font-size:clamp(26px,3vw,34px);font-weight:800}
 .choice.wrong{animation:shake .4s;border-color:var(--minor)}
 .choice.right{border-color:var(--third);box-shadow:0 0 0 4px rgba(92,197,146,.35)}
 @keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
 .oops{color:var(--minor);font-weight:800}
-@media (max-width:760px){ .cards{grid-template-columns:1fr} .tabs{grid-template-columns:1fr} }
+@media (max-width:760px){ .cards{grid-template-columns:1fr} }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -97,7 +102,6 @@ footer{font-size:20px;color:var(--dim)}
   <div class="tabs" role="group" aria-label="Choose a page">
     <button class="tab" id="tabShapes" type="button" aria-pressed="true">The 3 shapes</button>
     <button class="tab" id="tabSong" type="button" aria-pressed="false">Play the changes</button>
-    <button class="tab" id="tabFind" type="button" aria-pressed="false">Find the next chord</button>
   </div>
 
   <!-- ===== Page 1: the three shapes ===== -->
@@ -120,22 +124,16 @@ footer{font-size:20px;color:var(--dim)}
     <div class="cards" id="cards"></div>
   </section>
 
-  <!-- ===== Page 2: I IV I V I ===== -->
+  <!-- ===== Page 2: play the changes. Find the IV and V from the I, then play I IV I V I ===== -->
   <section id="pageSong" style="display:none;flex-direction:column;gap:clamp(18px,2.6vw,30px)">
-    <p class="note">Key of <span id="keyName">G</span>. Play it in all three places on the neck. Your hand barely moves.</p>
-    <p class="label">Where on the neck</p>
-    <div class="pos" role="group" aria-label="Where on the neck" id="pos"></div>
-    <div class="chips" id="chips"></div>
-    <div class="card" id="songCard"></div>
-    <div class="go">
-      <button class="big" id="playAll" type="button">&#9654; Play all</button>
-      <button class="big ghost" id="step" type="button">Next chord</button>
+    <div class="picker">
+      <button class="arrow" id="kPrev" type="button" aria-label="Previous key">&#9664;</button>
+      <div class="chordname" id="keyName" aria-live="polite">Key of G</div>
+      <button class="arrow" id="kNext" type="button" aria-label="Next key">&#9654;</button>
     </div>
-    <p class="note" id="rules"></p>
-  </section>
-
-  <!-- ===== Page 3: find the IV and V from the I, step by step ===== -->
-  <section id="pageFind" style="display:none;flex-direction:column;gap:clamp(18px,2.6vw,30px)">
+    <p class="label">Start from this shape</p>
+    <div class="pos" role="group" aria-label="Start from this shape" id="pos"></div>
+    <div class="steps" role="group" aria-label="Steps" id="steps"></div>
     <div class="bigdia" id="findDia"></div>
     <p class="say" id="findSay" aria-live="polite"></p>
     <div id="findAsk" style="display:flex;flex-direction:column;gap:clamp(14px,2vw,22px)"></div>
@@ -238,57 +236,32 @@ function renderShapes(){
   document.title=nm+(S.minor?" minor":" major")+" triads · Lessons with David";
 }
 
-/* I IV I V I: start on one of the three I shapes, then pick the IV and V shapes closest to it. */
-var DEG=[0,5,0,7,0], ROMAN=["I","IV","I","V","I"];
-function near(pc,target){
-  var best=null,bd=1e9;
-  allShapes(pc,false).forEach(function(o){ [0,12,-12].forEach(function(sh){
-    var fr=o.fr.map(function(f){return f+sh;}); if(Math.min.apply(null,fr)<1||Math.max.apply(null,fr)>17) return;
-    var d=Math.abs(fr.reduce(function(a,b){return a+b;},0)/3-target); if(d<bd){bd=d;best={sh:o.sh,fr:fr};}
-  }); });
-  return best;
-}
-function songChords(){
-  var I=allShapes(S.pc,false)[S.pos], avg=I.fr.reduce(function(a,b){return a+b;},0)/3;
-  return DEG.map(function(d){ return d===0?I:near((S.pc+d)%12,avg); });
-}
-function renderSong(){
-  var key=MAJ_NAMES[S.pc]; document.getElementById("keyName").textContent=key;
-  var pos=document.getElementById("pos"); pos.innerHTML="";
-  ["Low","Middle","High"].forEach(function(n,i){ var b=document.createElement("button"); b.type="button"; b.className="q"; b.textContent=n;
-    b.setAttribute("aria-pressed",i===S.pos?"true":"false"); b.addEventListener("click",function(){ S.pos=i; S.idx=0; renderSong(); }); pos.appendChild(b); });
-  var ch=songChords(), chips=document.getElementById("chips"); chips.innerHTML="";
-  ch.forEach(function(o,i){ var b=document.createElement("button"); b.type="button"; b.className="chip";
-    b.innerHTML=MAJ_NAMES[(S.pc+DEG[i])%12]+'<small>'+ROMAN[i]+'</small>'; b.setAttribute("aria-current",i===S.idx?"true":"false");
-    b.addEventListener("click",function(){ stopSong(); S.idx=i; renderSong(); strum(ch[i].fr); }); chips.appendChild(b); });
-  var all=[].concat.apply([],ch.map(function(o){return o.fr;})), w=windowFor(all), cur=ch[S.idx];
-  var card=document.getElementById("songCard");
-  card.innerHTML='<h2>'+MAJ_NAMES[(S.pc+DEG[S.idx])%12]+' &nbsp;<span class="inv">'+ROMAN[S.idx]+' chord, root on the '+ROOT_STRING[cur.sh.id]+' string</span></h2>'+
-    diagram(cur.fr,cur.sh.order,false,w.start,w.span);
-  var sp=spell(S.pc,false), iv=spell((S.pc+5)%12,false);
-  document.getElementById("rules").innerHTML="Two things to remember:<br>&bull; The root of the IV ("+iv.R+") is one fret above the 3rd of the I ("+sp["3"]+").<br>&bull; The root of the V is the 5th of the I ("+sp["5"]+").";
-}
-
 function show(page){
   S.page=page; stopSong();
   document.getElementById("pageShapes").style.display=page==="shapes"?"flex":"none";
   document.getElementById("pageSong").style.display=page==="song"?"flex":"none";
-  document.getElementById("pageFind").style.display=page==="find"?"flex":"none";
   document.getElementById("tabShapes").setAttribute("aria-pressed",page==="shapes"?"true":"false");
   document.getElementById("tabSong").setAttribute("aria-pressed",page==="song"?"true":"false");
-  document.getElementById("tabFind").setAttribute("aria-pressed",page==="find"?"true":"false");
-  if(page==="song")renderSong(); else if(page==="find")startFind(); else renderShapes();
+  if(page==="song")startKey(); else renderShapes();
 }
-document.getElementById("tabFind").addEventListener("click",function(){show("find");});
+document.getElementById("tabShapes").addEventListener("click",function(){show("shapes");});
+document.getElementById("tabSong").addEventListener("click",function(){show("song");});
+document.getElementById("prev").addEventListener("click",function(){ S.pc=(S.pc+11)%12; renderShapes(); });
+document.getElementById("next").addEventListener("click",function(){ S.pc=(S.pc+1)%12; renderShapes(); });
+document.getElementById("maj").addEventListener("click",function(){ S.minor=false; renderShapes(); });
+document.getElementById("min").addEventListener("click",function(){ S.minor=true; renderShapes(); });
 
-/* ---------- Find the next chord ----------
-   David's lesson, as he teaches it from the book:
+/* ---------- Play the changes ----------
+   David's lesson, as he teaches it from the book, in one key, from each of the three shapes:
    IV: the 3rd of the I, up one fret, is the root of the IV. Same string, so pick the shape with its root there.
-   V:  the 5th of the I is the root of the V. Same string, same idea. */
+   V:  the 5th of the I is the root of the V. Same string, same idea.
+   Then play I IV I V I and watch the hand barely move. */
 var STR=["G","B","E"];
+var KEYS=[7,0,2,9,4,5,10,3,8,1,6,11];   /* G first, like the book, then the rest */
+var DEG=["I","IV","I","V","I"];
 function rootShapeOn(s){ return SHAPES.filter(function(sh){ return sh.order[s]==="R"; })[0]; }
 function placeAt(pc,sh,s,fret){ var fr=shapeFrets(pc,sh,false), d=fret-fr[s]; return fr.map(function(f){return f+d;}); }
-function okFrets(fr){ return fr.every(function(f){ return f>=1&&f<=15; }); }
+function okFrets(fr){ return fr.every(function(f){ return f>=1&&f<=17; }); }
 function buildDrill(pc,shIdx,shift){
   var sh=SHAPES[shIdx], Ifr=shapeFrets(pc,sh,false).map(function(f){return f+shift;});
   var s3=sh.order.indexOf("3"), s5=sh.order.indexOf("5");
@@ -301,9 +274,13 @@ function buildDrill(pc,shIdx,shift){
   d.win=windowFor([].concat(d.I.fr,d.IV.fr,d.V.fr));
   return d;
 }
-var KEYS=[0,2,4,5,7,9,10,3,8,1,6,11];   /* every major key */
-function allDrills(){ var out=[]; KEYS.forEach(function(pc){ [0,1,2].forEach(function(i){ [0,12].some(function(sft){ var d=buildDrill(pc,i,sft); if(d){ out.push(d); return true; } return false; }); }); }); return out; }
-var F={d:null,step:0};
+/* the three starting shapes in one key, low on the neck to high */
+function startsFor(pc){
+  var out=[]; [0,1,2].forEach(function(i){ var d=buildDrill(pc,i,0)||buildDrill(pc,i,12); if(d) out.push(d); });
+  return out.sort(function(a,b){ return Math.min.apply(null,a.I.fr)-Math.min.apply(null,b.I.fr); });
+}
+function allDrills(){ var out=[]; KEYS.forEach(function(pc){ out=out.concat(startsFor(pc)); }); return out; }
+var F={ki:0,pos:0,d:null,step:0,done:{},idx:0};
 
 function dotX(f,w){ var W=360,left=44,right=12,cw=(W-left-right)/w.span; return left+(f-w.start+.5)*cw; }
 function drillSvg(w){
@@ -333,48 +310,89 @@ function el(tag,cls,html){ var e=document.createElement(tag); if(cls)e.className
 function btn(cls,html,fn){ var b=el("button",cls,html); b.type="button"; b.addEventListener("click",fn); return b; }
 function nm(pc){ return MAJ_NAMES[pc]; }
 
-function startFind(d){
-  F.d=d||F.d||buildDrill(7,1,0);   /* first time: G, 1st inversion, like David shows it */
+/* key and starting shape */
+function startKey(){ F.pos=0; F.done={}; startShape(); }
+function startShape(){
+  stopSong();
+  var pc=KEYS[F.ki], st=startsFor(pc); if(F.pos>=st.length) F.pos=0;
+  F.d=st[F.pos]; F.done={};
+  document.getElementById("keyName").textContent="Key of "+nm(pc);
+  var pos=document.getElementById("pos"); pos.innerHTML="";
+  st.forEach(function(d,i){ var b=btn("q",d.I.sh.inv,function(){ F.pos=i; startShape(); });
+    b.setAttribute("aria-pressed",i===F.pos?"true":"false"); pos.appendChild(b); });
   var box=document.getElementById("findDia");
   box.innerHTML='<p class="title" id="findTitle"></p>'+drillSvg(F.d.win);
   box.onclick=function(){ strum(F.cur||F.d.I.fr); };
-  findStep(0);
+  findStep(1);
+}
+document.getElementById("kPrev").addEventListener("click",function(){ F.ki=(F.ki+KEYS.length-1)%KEYS.length; startKey(); });
+document.getElementById("kNext").addEventListener("click",function(){ F.ki=(F.ki+1)%KEYS.length; startKey(); });
+
+/* the step bar: 1 Find the IV, 2 Find the V, 3 Play it. Tapping one jumps there. */
+function stepsBar(active){
+  var d=F.d, box=document.getElementById("steps"); box.innerHTML="";
+  [["iv","1. Find the IV ("+nm(d.IV.pc)+")",1],["v","2. Find the V ("+nm(d.V.pc)+")",4],["play","3. Play it",7]].forEach(function(t){
+    var b=btn("stp"+(F.done[t[0]]?" done":""),(F.done[t[0]]?"&#10003; ":"")+t[1],function(){ findStep(t[2]); });
+    b.setAttribute("aria-current",t[0]===active?"true":"false"); box.appendChild(b); });
 }
 /* on a phone the picture has scrolled off the top by now: bring it back first so the slide is seen */
 function findStep(n){
+  stopSong();
   var box=document.getElementById("findDia");
-  if(n>0&&box.getBoundingClientRect().top<0){ box.scrollIntoView({behavior:"smooth",block:"start"}); setTimeout(function(){ findStepNow(n); },500); }
+  if(n>1&&box.getBoundingClientRect().top<0){ box.scrollIntoView({behavior:"smooth",block:"start"}); setTimeout(function(){ findStepNow(n); },500); }
   else findStepNow(n);
 }
 function findStepNow(n){
   var d=F.d, I=d.I, sp=spell(I.pc,false), K=nm(I.pc), IV=nm(d.IV.pc), V=nm(d.V.pc);
   F.step=n;
-  if(n===0){ F.cur=I.fr; setDots(I.fr,I.sh.order); title(K,"the I chord, "+I.sh.inv);
-    say("Here's <b>"+K+"</b>, "+I.sh.inv.toLowerCase()+". Tap the picture to hear it.");
-    ask([btn("big","Find the IV chord &#9654;",function(){ findStep(1); })]); }
-  if(n===1){ setDots(I.fr,I.sh.order,d.s3);
-    say("Find the <b>3rd</b>. It's "+sp["3"]+", on the <b>"+STR[d.s3]+" string</b>.");
-    ask([btn("big","Move it up one fret &#9654;",function(){ findStep(2); })]); }
+  stepsBar(n<=3?"iv":n<=6?"v":"play");
+  if(n===1){ F.cur=I.fr; setDots(I.fr,I.sh.order,d.s3); title(K,"the I chord, "+I.sh.inv);
+    say("You're holding <b>"+K+"</b>, "+I.sh.inv.toLowerCase()+". Let's find <b>"+IV+"</b>, the IV chord, right where your hand is.<br>First find the <b>3rd</b>. It's "+sp["3"]+", on the <b>"+STR[d.s3]+" string</b>.");
+    ask([btn("big","Move the 3rd up one fret &#9654;",function(){ findStep(2); })]); }
   if(n===2){ var fr=I.fr.slice(), o=I.sh.order.slice(); fr[d.s3]+=1; o[d.s3]="R"; setDots(fr,o,d.s3);
-    title(K+" &rarr; "+IV,"");
-    say("One fret up is <b>"+spell(d.IV.pc,false).R+"</b>. That's the root of your IV chord, "+IV+". It's still on the <b>"+STR[d.s3]+" string</b>.");
+    title(K+" &rarr; "+IV,"finding the IV");
+    say("One fret up is <b>"+spell(d.IV.pc,false).R+"</b>. That's the root of "+IV+". It's still on the <b>"+STR[d.s3]+" string</b>.");
     shapeQuestion(d.IV,d.s3,function(){ findStep(3); }); }
-  if(n===3){ F.cur=d.IV.fr; setDots(d.IV.fr,d.IV.sh.order); title(IV,"the IV chord, "+d.IV.sh.inv); setTimeout(function(){ strum(d.IV.fr); },700);
+  if(n===3){ F.done.iv=true; stepsBar("iv"); F.cur=d.IV.fr; setDots(d.IV.fr,d.IV.sh.order); title(IV,"the IV chord, "+d.IV.sh.inv); setTimeout(function(){ strum(d.IV.fr); },700);
     say("That's right. <b>"+d.IV.sh.inv+"</b>. That's <b>"+IV+"</b>, your IV chord.");
-    ask([btn("big","Back to "+K+", find the V &#9654;",function(){ findStep(4); })]); }
+    ask([btn("big","Next: find the V &#9654;",function(){ findStep(4); })]); }
   if(n===4){ F.cur=I.fr; setDots(I.fr,I.sh.order,d.s5); title(K,"the I chord, "+I.sh.inv); setTimeout(function(){ strum(I.fr); },700);
-    say("Back on "+K+". The <b>5th</b> of "+K+" is "+sp["5"]+".");
+    say("Back on <b>"+K+"</b>. Let's find <b>"+V+"</b>, the V chord.<br>The <b>5th</b> of "+K+" is "+sp["5"]+".");
     var q=el("p","ask","Which string is the 5th on?"), row=el("div","strings");
     STR.forEach(function(name,s){ row.appendChild(btn("",name,function(){
       if(s===d.s5){ findStep(5); } else { this.classList.add("wrong"); say("Not the "+name+" string. Look for the dot marked <b>5</b>."); } })); });
     ask([q,row]); }
-  if(n===5){ var o2=I.sh.order.slice(); o2[d.s5]="R"; setDots(I.fr,o2,d.s5); title(K+" &rarr; "+V,"");
+  if(n===5){ var o2=I.sh.order.slice(); o2[d.s5]="R"; setDots(I.fr,o2,d.s5); title(K+" &rarr; "+V,"finding the V");
     say("Right, the <b>"+STR[d.s5]+" string</b>. The 5th of your I is the root of your V. So <b>"+V+"</b> has its root right there.");
     shapeQuestion(d.V,d.s5,function(){ findStep(6); }); }
-  if(n===6){ F.cur=d.V.fr; setDots(d.V.fr,d.V.sh.order); title(V,"the V chord, "+d.V.sh.inv); setTimeout(function(){ strum(d.V.fr); },700);
+  if(n===6){ F.done.v=true; stepsBar("v"); F.cur=d.V.fr; setDots(d.V.fr,d.V.sh.order); title(V,"the V chord, "+d.V.sh.inv); setTimeout(function(){ strum(d.V.fr); },700);
     say("That's right. <b>"+d.V.sh.inv+"</b>. That's <b>"+V+"</b>, your V chord.");
-    ask([btn("big","Try another key &#9654;",function(){ var all=allDrills().filter(function(x){ return !(x.pc===d.pc&&x.shIdx===d.shIdx); }); startFind(all[Math.floor(Math.random()*all.length)]); }),
-         btn("big ghost","Do this one again",function(){ startFind(d); })]); }
+    ask([btn("big","Next: play it &#9654;",function(){ findStep(7); })]); }
+  if(n===7){ F.done.play=true; stepsBar("play"); F.idx=0; playChord(0,false);
+    say("Play <b>I IV I V I</b>. Watch the dots: your hand barely moves.<br>&bull; The root of "+IV+" is one fret above "+sp["3"]+", the 3rd of "+K+".<br>&bull; The root of "+V+" is the 5th of "+K+".");
+    var chips=el("div","chips"); chips.id="chips";
+    DEG.forEach(function(r,i){ var c=chordOf(i), b=btn("chip",nm(c.pc)+'<small>'+r+'</small>',function(){ stopSong(); playChord(i,true); });
+      chips.appendChild(b); });
+    var go=el("div","go");
+    go.appendChild(btn("big","&#9654; Play all",function(){ toggleSong(this); }));
+    go.appendChild(btn("big ghost","Next chord",function(){ stopSong(); playChord((F.idx+1)%5,true); }));
+    var st=startsFor(d.pc), nextBtn = F.pos+1<st.length
+      ? btn("big ghost","Next: start from "+st[F.pos+1].I.sh.inv+" &#9654;",function(){ F.pos++; startShape(); })
+      : btn("big ghost","Next key: "+nm(KEYS[(F.ki+1)%KEYS.length])+" &#9654;",function(){ F.ki=(F.ki+1)%KEYS.length; startKey(); });
+    ask([chips,go,nextBtn]); markChip(); }
+}
+function chordOf(i){ return i===1?F.d.IV:i===3?F.d.V:F.d.I; }
+function markChip(){ var c=document.getElementById("chips"); if(!c) return; [].forEach.call(c.children,function(b,i){ b.setAttribute("aria-current",i===F.idx?"true":"false"); }); }
+function playChord(i,sound){
+  var c=chordOf(i); F.idx=i; F.cur=c.fr; setDots(c.fr,c.sh.order);
+  title(nm(c.pc),"the "+DEG[i]+" chord, "+c.sh.inv); markChip(); if(sound) strum(c.fr);
+}
+var songTimer=null, songBtn=null;
+function stopSong(){ if(songTimer){clearInterval(songTimer);songTimer=null;} if(songBtn){ songBtn.innerHTML="&#9654; Play all"; songBtn=null; } }
+function toggleSong(b){
+  if(songTimer){ stopSong(); return; }
+  songBtn=b; b.innerHTML="&#9632; Stop"; playChord(0,true);
+  songTimer=setInterval(function(){ if(F.idx>=4){ stopSong(); return; } playChord(F.idx+1,true); },2000);
 }
 /* the three shapes, like the book page: the student taps the one with its root on string s */
 function shapeQuestion(ch,s,onRight){
@@ -388,24 +406,6 @@ function shapeQuestion(ch,s,onRight){
     cards.appendChild(b); });
   ask([q,cards]);
 }
-document.getElementById("tabShapes").addEventListener("click",function(){show("shapes");});
-document.getElementById("tabSong").addEventListener("click",function(){show("song");});
-document.getElementById("prev").addEventListener("click",function(){ S.pc=(S.pc+11)%12; renderShapes(); });
-document.getElementById("next").addEventListener("click",function(){ S.pc=(S.pc+1)%12; renderShapes(); });
-document.getElementById("maj").addEventListener("click",function(){ S.minor=false; renderShapes(); });
-document.getElementById("min").addEventListener("click",function(){ S.minor=true; renderShapes(); });
-document.getElementById("step").addEventListener("click",function(){ stopSong(); S.idx=(S.idx+1)%5; renderSong(); strum(songChords()[S.idx].fr); });
-
-var songTimer=null;
-function stopSong(){ if(songTimer){clearInterval(songTimer);songTimer=null;} var b=document.getElementById("playAll"); b.innerHTML="&#9654; Play all"; }
-document.getElementById("playAll").addEventListener("click",function(){
-  if(songTimer){ stopSong(); return; }
-  this.innerHTML="&#9632; Stop"; S.idx=0; renderSong(); strum(songChords()[0].fr);
-  songTimer=setInterval(function(){
-    if(S.idx>=4){ stopSong(); return; }
-    S.idx++; renderSong(); strum(songChords()[S.idx].fr);
-  },2000);
-});
 function glow(el){ el.classList.add("ring"); setTimeout(function(){ el.classList.remove("ring"); },900); }
 
 /* ---------- sound ----------
@@ -497,7 +497,7 @@ function strum(fr){
     at+=0.032+Math.random()*0.022;
   }
 }
-window.__triads={buildDrill:buildDrill,allDrills:allDrills,F:F,findStep:findStep,show:show,shapeFrets:shapeFrets,allShapes:allShapes,spell:spell,songChords:songChords,S:S,renderSong:renderSong};
+window.__triads={buildDrill:buildDrill,allDrills:allDrills,startsFor:startsFor,F:F,findStep:findStep,show:show,shapeFrets:shapeFrets,allShapes:allShapes,spell:spell,S:S};
 
 renderShapes();
 </script>
