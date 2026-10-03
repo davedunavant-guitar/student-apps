@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Triads · Lessons with David</title>
+<meta name="description" content="The three triad shapes on the G, B and E strings. Pick a chord, flip it to minor, tap a shape to hear it.">
+<link rel="icon" href="../favicon.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --ink:#0E1420; --panel:#182235; --panel2:#1F2B42; --line:#2C3A56;
+  --brass:#D2AE63; --ivory:#F3EEE4; --dim:#A9B4C8;
+  --root:#D2AE63; --third:#5CC592; --minor:#E57C62; --fifth:#8FB4F0;
+  --wood:#2A2018; --fret:#8B7A66;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--ivory);font-family:var(--display)}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1100px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(16px,4vw,48px);display:flex;flex-direction:column;gap:clamp(18px,2.6vw,30px)}
+h1{font-size:clamp(40px,6vw,72px);font-weight:800;line-height:1;margin:0}
+h1 span{color:var(--brass)}
+.lede{font-size:clamp(20px,2.2vw,26px);line-height:1.35;color:var(--dim);margin:8px 0 0}
+button{font:inherit;cursor:pointer;color:var(--ivory)}
+button:focus-visible{outline:3px solid var(--ivory);outline-offset:3px}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tab{min-height:72px;border-radius:18px;border:2px solid var(--line);background:var(--panel);font-size:clamp(22px,2.4vw,28px);font-weight:800;padding:10px}
+.tab[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+
+.picker{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.arrow{width:clamp(72px,9vw,96px);height:clamp(72px,9vw,96px);border-radius:50%;border:2px solid var(--line);background:var(--panel2);font-size:clamp(30px,4vw,42px);font-weight:800;line-height:1}
+.chordname{text-align:center;font-size:clamp(44px,7vw,80px);font-weight:800;line-height:1}
+.qual{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.q{min-height:72px;border-radius:18px;border:2px solid var(--line);background:var(--panel);font-size:clamp(24px,2.6vw,30px);font-weight:800}
+.q[aria-pressed="true"]{background:var(--ivory);border-color:var(--ivory);color:var(--ink)}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px 22px;font-size:clamp(20px,2vw,24px)}
+.legend b{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;color:var(--ink);margin-right:8px;font-size:20px}
+.note{font-size:clamp(20px,2.1vw,24px);line-height:1.35;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:14px 18px;margin:0}
+.note strong{color:var(--minor)}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.6vw,20px)}
+.card{font-size:20px;display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:clamp(14px,1.8vw,20px)}
+.card:hover{border-color:var(--brass)}
+.card.ring{border-color:var(--brass);box-shadow:0 0 0 4px rgba(210,174,99,.25)}
+.card h2{margin:0;font-size:clamp(24px,2.4vw,30px);line-height:1.1}
+.card .inv{font-size:clamp(18px,1.8vw,21px);color:var(--dim)}
+.card .notes{font-size:clamp(20px,2vw,24px)}
+.card .hear{font-size:clamp(19px,1.9vw,22px);color:var(--brass);font-weight:800}
+svg{width:100%;height:auto;display:block}
+
+.chips{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.chip{min-height:72px;border-radius:16px;border:2px solid var(--line);background:var(--panel);font-size:clamp(26px,3.2vw,36px);font-weight:800;line-height:1;padding:6px 2px}
+.chip small{display:block;font-size:clamp(19px,1.8vw,22px);color:var(--dim);margin-top:4px;font-weight:500}
+.chip[aria-current="true"]{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.chip[aria-current="true"] small{color:var(--ink)}
+.pos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.big{min-height:84px;border-radius:20px;border:none;background:var(--brass);color:var(--ink);font-size:clamp(26px,3vw,34px);font-weight:800}
+.go{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ghost{background:var(--panel2);color:var(--ivory);border:2px solid var(--line)}
+.label{font-size:clamp(20px,2vw,24px);color:var(--dim);margin:0 0 -8px}
+
+footer{font-size:20px;color:var(--dim)}
+@media (max-width:760px){ .cards{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span>Triads</span> on the top 3 strings</h1>
+    <p class="lede">Street Guitar Book 2, Chapter 1. Three notes, three shapes, on the G, B and E strings.</p>
+  </header>
+
+  <div class="tabs" role="group" aria-label="Choose a page">
+    <button class="tab" id="tabShapes" type="button" aria-pressed="true">The 3 shapes</button>
+    <button class="tab" id="tabSong" type="button" aria-pressed="false">Play the changes</button>
+  </div>
+
+  <!-- ===== Page 1: the three shapes ===== -->
+  <section id="pageShapes" style="display:flex;flex-direction:column;gap:clamp(18px,2.6vw,30px)">
+    <div class="picker">
+      <button class="arrow" id="prev" type="button" aria-label="Previous chord">&#9664;</button>
+      <div class="chordname" id="chordName" aria-live="polite">G major</div>
+      <button class="arrow" id="next" type="button" aria-label="Next chord">&#9654;</button>
+    </div>
+    <div class="qual" role="group" aria-label="Major or minor">
+      <button class="q" id="maj" type="button" aria-pressed="true">Major</button>
+      <button class="q" id="min" type="button" aria-pressed="false">Minor</button>
+    </div>
+    <div class="legend">
+      <span><b style="background:var(--root)">R</b>Root</span>
+      <span><b id="legend3" style="background:var(--third)">3</b>3rd</span>
+      <span><b style="background:var(--fifth)">5</b>5th</span>
+    </div>
+    <p class="note" id="tip">Learn each shape by the string the root is on. Tap a shape to hear it.</p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- ===== Page 2: I IV I V I ===== -->
+  <section id="pageSong" style="display:none;flex-direction:column;gap:clamp(18px,2.6vw,30px)">
+    <p class="note">Key of <span id="keyName">G</span>. Play it in all three places on the neck. Your hand barely moves.</p>
+    <p class="label">Where on the neck</p>
+    <div class="pos" role="group" aria-label="Where on the neck" id="pos"></div>
+    <div class="chips" id="chips"></div>
+    <div class="card" id="songCard"></div>
+    <div class="go">
+      <button class="big" id="playAll" type="button">&#9654; Play all</button>
+      <button class="big ghost" id="step" type="button">Next chord</button>
+    </div>
+    <p class="note" id="rules"></p>
+  </section>
+
+  <footer>Lessons with David.</footer>
+</div>
+
+<script>
+/* ---------- music facts ---------- */
+var OPEN=[55,59,64];                 // G3, B3, E4: the top three strings, low to high
+var SNAME=["G","B","E"];
+var MAJ_NAMES=["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+var MIN_NAMES=["C","C#","D","Eb","E","F","F#","G","G#","A","Bb","B"];
+var LET="CDEFGAB", LETPC=[0,2,4,5,7,9,11];
+/* Which chord tone sits on the G, B and E strings for each shape (book: R-3-5, 3-5-R, 5-R-3). */
+var SHAPES=[
+  {id:"root", inv:"Root position",  order:["R","3","5"]},
+  {id:"first",inv:"1st inversion",  order:["3","5","R"]},
+  {id:"second",inv:"2nd inversion", order:["5","R","3"]}
+];
+var ROOT_STRING={root:"G",first:"E",second:"B"};
+
+function chordName(pc,minor){ return (minor?MIN_NAMES:MAJ_NAMES)[pc]; }
+/* Spell R, 3, 5 with the right letters (G B D, Eb G Bb, C# E G#), never a guessed sharp or flat. */
+function spell(pc,minor){
+  var nm=chordName(pc,minor), li=LET.indexOf(nm[0]), out={};
+  var steps={R:[0,0],"3":[2,minor?3:4],"5":[4,7]};
+  for(var k in steps){
+    var L=(li+steps[k][0])%7, want=(pc+steps[k][1])%12, nat=LETPC[L];
+    var d=((want-nat)%12+12)%12; if(d>6)d-=12;
+    out[k]=LET[L]+(d===1?"#":d===2?"##":d===-1?"b":d===-2?"bb":"");
+  }
+  return out;
+}
+/* Major shape frets: each string gets its chord tone, all within 4 frets, lowest place on the neck
+   with no open strings, so every shape slides to any key. Minor = the same shape, 3rd down one fret. */
+function shapeFrets(pc,shape,minor){
+  var iv={R:0,"3":4,"5":7}, best=null;
+  for(var f0=1;f0<=14;f0++){
+    var fr=[], ok=true;
+    for(var s=0;s<3;s++){
+      var want=(pc+iv[shape.order[s]])%12, f=null;
+      for(var c=f0-3;c<=f0+4;c++){ if(c>=1&&(OPEN[s]+c)%12===want){ if(s===0){ if(c===f0){f=c;break;} } else { f=c; break; } } }
+      if(f===null){ok=false;break;} fr.push(f);
+    }
+    if(!ok) continue;
+    if(Math.max.apply(null,fr)-Math.min.apply(null,fr)>3) continue;
+    best=fr; break;
+  }
+  if(minor){ var i3=shape.order.indexOf("3"); best=best.slice(); best[i3]-=1; }
+  return best;
+}
+function allShapes(pc,minor){
+  return SHAPES.map(function(sh){ return {sh:sh,fr:shapeFrets(pc,sh,minor)}; })
+    .sort(function(a,b){ return Math.min.apply(null,a.fr)-Math.min.apply(null,b.fr); });
+}
+
+/* ---------- drawing ---------- */
+function colorOf(t,minor){ return t==="R"?"var(--root)":t==="5"?"var(--fifth)":(minor?"var(--minor)":"var(--third)"); }
+function diagram(fr,order,minor,start,span){
+  var W=360,left=44,right=12,top=26,gap=44,H=top+gap*2+64;
+  var cw=(W-left-right)/span, s="";
+  s+='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+order.map(function(t,i){return SNAME[i]+" string fret "+fr[i]+", "+(t==="R"?"root":t==="3"?"third":"fifth");}).join("; ")+'">';
+  s+='<rect x="'+left+'" y="'+(top-14)+'" width="'+(W-left-right)+'" height="'+(gap*2+28)+'" rx="6" fill="var(--wood)"/>';
+  for(var k=0;k<=span;k++){ var x=left+k*cw; s+='<line x1="'+x+'" y1="'+(top-14)+'" x2="'+x+'" y2="'+(top+gap*2+14)+'" stroke="var(--fret)" stroke-width="'+(k===0&&start===1?7:3)+'"/>'; }
+  for(var r=0;r<3;r++){ var y=top+gap*(2-r)+0; s+='<line x1="'+left+'" y1="'+y+'" x2="'+(W-right)+'" y2="'+y+'" stroke="#C9C2B4" stroke-width="'+(3-r*0.6)+'"/>';
+    s+='<text x="18" y="'+(y+8)+'" text-anchor="middle" font-size="24" font-weight="800" fill="var(--dim)">'+SNAME[r]+'</text>'; }
+  for(var k2=0;k2<span;k2++){ s+='<text x="'+(left+(k2+.5)*cw)+'" y="'+(top+gap*2+50)+'" text-anchor="middle" font-size="24" font-weight="800" fill="var(--ivory)">'+(start+k2)+'</text>'; }
+  for(var i=0;i<3;i++){ var cx=left+(fr[i]-start+.5)*cw, cy=top+gap*(2-i);
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="20" fill="'+colorOf(order[i],minor)+'"/>';
+    s+='<text x="'+cx+'" y="'+(cy+8)+'" text-anchor="middle" font-size="23" font-weight="800" fill="#0E1420">'+order[i]+'</text>'; }
+  return s+'</svg>';
+}
+function windowFor(frets){ var lo=Math.min.apply(null,frets), hi=Math.max.apply(null,frets); var start=Math.max(1,lo-1); return {start:start,span:Math.max(5,hi-start+2)}; }
+
+/* ---------- state ---------- */
+var S={pc:7,minor:false,page:"shapes",pos:0,idx:0};
+try{ var q=new URLSearchParams(location.search); if(q.has("k")){ var k=MAJ_NAMES.indexOf(q.get("k")); if(k<0)k=MIN_NAMES.indexOf(q.get("k")); if(k>=0)S.pc=k; } if(q.get("m")==="1")S.minor=true; }catch(e){}
+
+function renderShapes(){
+  var nm=chordName(S.pc,S.minor);
+  document.getElementById("chordName").textContent=nm+(S.minor?" minor":" major");
+  document.getElementById("maj").setAttribute("aria-pressed",S.minor?"false":"true");
+  document.getElementById("min").setAttribute("aria-pressed",S.minor?"true":"false");
+  document.getElementById("legend3").style.background=S.minor?"var(--minor)":"var(--third)";
+  document.getElementById("tip").innerHTML=S.minor
+    ? "Minor: the <strong>3rd moved down one fret</strong>. Everything else stayed put. Tap a shape to hear it."
+    : "Learn each shape by the string the root is on. Tap a shape to hear it.";
+  var sp=spell(S.pc,S.minor), box=document.getElementById("cards"); box.innerHTML="";
+  allShapes(S.pc,S.minor).forEach(function(o){
+    var w=windowFor(o.fr), b=document.createElement("button");
+    b.type="button"; b.className="card";
+    b.innerHTML='<h2>Root on the '+ROOT_STRING[o.sh.id]+' string</h2><div class="inv">'+o.sh.inv+'</div>'+
+      diagram(o.fr,o.sh.order,S.minor,w.start,w.span)+
+      '<div class="notes">Notes: '+o.sh.order.map(function(t){return sp[t];}).join(" &nbsp;")+'</div><div class="hear">&#9654; Tap to hear</div>';
+    b.addEventListener("click",function(){ strum(o.fr); glow(b); });
+    box.appendChild(b);
+  });
+  document.title=nm+(S.minor?" minor":" major")+" triads · Lessons with David";
+}
+
+/* I IV I V I: start on one of the three I shapes, then pick the IV and V shapes closest to it. */
+var DEG=[0,5,0,7,0], ROMAN=["I","IV","I","V","I"];
+function near(pc,target){
+  var best=null,bd=1e9;
+  allShapes(pc,false).forEach(function(o){ [0,12,-12].forEach(function(sh){
+    var fr=o.fr.map(function(f){return f+sh;}); if(Math.min.apply(null,fr)<1||Math.max.apply(null,fr)>17) return;
+    var d=Math.abs(fr.reduce(function(a,b){return a+b;},0)/3-target); if(d<bd){bd=d;best={sh:o.sh,fr:fr};}
+  }); });
+  return best;
+}
+function songChords(){
+  var I=allShapes(S.pc,false)[S.pos], avg=I.fr.reduce(function(a,b){return a+b;},0)/3;
+  return DEG.map(function(d){ return d===0?I:near((S.pc+d)%12,avg); });
+}
+function renderSong(){
+  var key=MAJ_NAMES[S.pc]; document.getElementById("keyName").textContent=key;
+  var pos=document.getElementById("pos"); pos.innerHTML="";
+  ["Low","Middle","High"].forEach(function(n,i){ var b=document.createElement("button"); b.type="button"; b.className="q"; b.textContent=n;
+    b.setAttribute("aria-pressed",i===S.pos?"true":"false"); b.addEventListener("click",function(){ S.pos=i; S.idx=0; renderSong(); }); pos.appendChild(b); });
+  var ch=songChords(), chips=document.getElementById("chips"); chips.innerHTML="";
+  ch.forEach(function(o,i){ var b=document.createElement("button"); b.type="button"; b.className="chip";
+    b.innerHTML=MAJ_NAMES[(S.pc+DEG[i])%12]+'<small>'+ROMAN[i]+'</small>'; b.setAttribute("aria-current",i===S.idx?"true":"false");
+    b.addEventListener("click",function(){ stopSong(); S.idx=i; renderSong(); strum(ch[i].fr); }); chips.appendChild(b); });
+  var all=[].concat.apply([],ch.map(function(o){return o.fr;})), w=windowFor(all), cur=ch[S.idx];
+  var card=document.getElementById("songCard");
+  card.innerHTML='<h2>'+MAJ_NAMES[(S.pc+DEG[S.idx])%12]+' &nbsp;<span class="inv">'+ROMAN[S.idx]+' chord, root on the '+ROOT_STRING[cur.sh.id]+' string</span></h2>'+
+    diagram(cur.fr,cur.sh.order,false,w.start,w.span);
+  var sp=spell(S.pc,false), iv=spell((S.pc+5)%12,false);
+  document.getElementById("rules").innerHTML="Two things to remember:<br>&bull; The root of the IV ("+iv.R+") is one fret above the 3rd of the I ("+sp["3"]+").<br>&bull; The root of the V is the 5th of the I ("+sp["5"]+").";
+}
+
+function show(page){
+  S.page=page; stopSong();
+  document.getElementById("pageShapes").style.display=page==="shapes"?"flex":"none";
+  document.getElementById("pageSong").style.display=page==="song"?"flex":"none";
+  document.getElementById("tabShapes").setAttribute("aria-pressed",page==="shapes"?"true":"false");
+  document.getElementById("tabSong").setAttribute("aria-pressed",page==="song"?"true":"false");
+  if(page==="song")renderSong(); else renderShapes();
+}
+document.getElementById("tabShapes").addEventListener("click",function(){show("shapes");});
+document.getElementById("tabSong").addEventListener("click",function(){show("song");});
+document.getElementById("prev").addEventListener("click",function(){ S.pc=(S.pc+11)%12; renderShapes(); });
+document.getElementById("next").addEventListener("click",function(){ S.pc=(S.pc+1)%12; renderShapes(); });
+document.getElementById("maj").addEventListener("click",function(){ S.minor=false; renderShapes(); });
+document.getElementById("min").addEventListener("click",function(){ S.minor=true; renderShapes(); });
+document.getElementById("step").addEventListener("click",function(){ stopSong(); S.idx=(S.idx+1)%5; renderSong(); strum(songChords()[S.idx].fr); });
+
+var songTimer=null;
+function stopSong(){ if(songTimer){clearInterval(songTimer);songTimer=null;} var b=document.getElementById("playAll"); b.innerHTML="&#9654; Play all"; }
+document.getElementById("playAll").addEventListener("click",function(){
+  if(songTimer){ stopSong(); return; }
+  this.innerHTML="&#9632; Stop"; S.idx=0; renderSong(); strum(songChords()[0].fr);
+  songTimer=setInterval(function(){
+    if(S.idx>=4){ stopSong(); return; }
+    S.idx++; renderSong(); strum(songChords()[S.idx].fr);
+  },2000);
+});
+function glow(el){ el.classList.add("ring"); setTimeout(function(){ el.classList.remove("ring"); },900); }
+
+/* ---------- sound: real recorded guitar notes, same engine as the Fretboard app ----------
+   Acoustic steel-string notes (FluidR3 GM, CC BY 3.0), MIDI 55-81 in sounds/.
+   Until a note has loaded, a plucked-string synth plays so the page is never silent. */
+var ctx=null,cache={},SAMPLES={},__sLoading=false;
+function loadSamples(){
+  if(__sLoading||!ctx||!window.fetch) return; __sLoading=true;
+  for(var m=55;m<=81;m++)(function(m){
+    fetch("sounds/"+m+".mp3").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(function(a){ ctx.decodeAudioData(a,function(b){ SAMPLES[m]=b; },function(){}); })
+      .catch(function(){});
+  })(m);
+}
+try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
+var __unlocked=false;
+function ensureAudio(){
+  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false; ctx=new AC(); }
+  if(ctx.state!=="running"){ try{ ctx.resume(); }catch(e){} }
+  loadSamples();
+  if(!__unlocked){
+    __unlocked=true;
+    try{ var bb=ctx.createBuffer(1,1,22050), ss=ctx.createBufferSource(); ss.buffer=bb; ss.connect(ctx.destination); ss.start(0); }catch(e){}
+    try{
+      var el=document.createElement("audio"); el.setAttribute("playsinline",""); el.setAttribute("x-webkit-airplay","deny");
+      el.loop=true; el.preload="auto";
+      el.src="data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
+      var pp=el.play(); if(pp&&pp.catch) pp.catch(function(){});
+    }catch(e){}
+  }
+  return true;
+}
+["touchend","pointerup","click","keydown"].forEach(function(ev){
+  document.addEventListener(ev,function(){ ensureAudio(); },{passive:true,capture:true});
+});
+document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ctx&&ctx.state!=="running"){ try{ctx.resume();}catch(e){} } });
+
+function fq(m){ return 440*Math.pow(2,(m-69)/12); }
+function buf(m){
+  if(SAMPLES[m])return SAMPLES[m];
+  if(cache[m])return cache[m];
+  var sr=ctx.sampleRate,N=Math.max(2,Math.round(sr/fq(m))),len=Math.floor(sr*2.2);
+  var b=ctx.createBuffer(1,len,sr),d=b.getChannelData(0),p=0;
+  for(var i=0;i<N;i++){ var n=Math.random()*2-1; p=0.55*n+0.45*p; d[i]=p; }
+  for(var j=N;j<len;j++){ d[j]=0.5*(d[j-N]+d[j-N+1])*0.99975; }
+  var a=Math.floor(sr*0.004); for(var k=0;k<a;k++) d[k]*=k/a;
+  cache[m]=b; return b;
+}
+function pluck(m,when){
+  if(!ensureAudio())return;
+  var t=when||ctx.currentTime;
+  var src=ctx.createBufferSource(); src.buffer=buf(m);
+  var real=src.buffer===SAMPLES[m];
+  var f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=real?8000:3400;
+  var g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(real?2.2:0.4,t+0.006);
+  /* let the recorded note ring out (the files are about 3 seconds long), then fade */
+  g.gain.exponentialRampToValueAtTime(real?2.0:0.2,t+1.8);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+3.1);
+  src.connect(f); f.connect(g); g.connect(ctx.destination);
+  src.start(t); src.stop(t+3.15);
+}
+/* A gentle down-strum: G string first, then B, then E, 45 ms apart. */
+function strum(fr){
+  if(!ensureAudio())return;
+  var t=ctx.currentTime+0.03;
+  for(var s=0;s<3;s++) pluck(OPEN[s]+fr[s],t+s*0.045);
+}
+window.__triads={shapeFrets:shapeFrets,allShapes:allShapes,spell:spell,songChords:songChords,S:S,renderSong:renderSong};
+
+renderShapes();
+</script>
+</body>
+</html>
