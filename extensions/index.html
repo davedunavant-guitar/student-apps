@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Extensions in E · Lessons with David</title>
+<meta name="description" content="Every triad shape in E with every extension. Hear it over the low E, see where the note goes.">
+<link rel="icon" href="../favicon.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Extensions">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --ink:#0E1420; --panel:#182235; --panel2:#1F2B42; --line:#2C3A56;
+  --brass:#D2AE63; --ivory:#F3EEE4; --dim:#A9B4C8;
+  --root:#D2AE63; --third:#5CC592; --minor:#E57C62; --fifth:#8FB4F0; --ext:#F3EEE4;
+  --wood:#2A2018; --fret:#8B7A66;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--ink);color:var(--ivory);font-family:var(--display)}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1000px;margin:0 auto;padding:clamp(16px,3vw,36px) 16px;display:flex;flex-direction:column;gap:clamp(16px,2.4vw,26px)}
+h1{font-size:clamp(38px,6vw,68px);font-weight:800;line-height:1;margin:0}
+h1 span{color:var(--brass)}
+.lede{font-size:clamp(20px,2.2vw,24px);line-height:1.35;color:var(--dim);margin:8px 0 0}
+button{font:inherit;cursor:pointer;color:var(--ivory)}
+button:focus-visible{outline:3px solid var(--ivory);outline-offset:3px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tog{min-height:72px;border-radius:18px;border:2px solid var(--line);background:var(--panel);font-size:clamp(22px,2.6vw,28px);font-weight:800;padding:8px;line-height:1.1}
+.tog small{display:block;font-size:.7em;font-weight:500;color:var(--dim)}
+.tog[aria-pressed="true"]{background:var(--ivory);border-color:var(--ivory);color:var(--ink)}
+.tog[aria-pressed="true"] small{color:#4a5468}
+.board{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:clamp(14px,2vw,22px);display:flex;flex-direction:column;gap:10px}
+.name{font-size:clamp(46px,8vw,84px);font-weight:800;line-height:1;text-align:center}
+.say{font-size:clamp(21px,2.4vw,26px);line-height:1.3;text-align:center;color:var(--dim);min-height:2.6em}
+.say b{color:var(--ivory)}
+svg{width:100%;height:auto;display:block}
+#neck{width:100%;max-width:640px;margin:0 auto}
+.play{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{min-height:80px;border:none;border-radius:20px;font-size:clamp(23px,2.8vw,30px);font-weight:800;padding:10px;line-height:1.1}
+.hear{background:var(--brass);color:var(--ink)}
+.bf{background:var(--panel2);border:2px solid var(--brass)!important}
+.all{grid-column:1/-1;background:var(--panel2);border:2px solid var(--line)!important}
+.all[aria-pressed="true"]{background:var(--minor);color:var(--ink)}
+.group{display:flex;flex-direction:column;gap:8px}
+.group h2{margin:0;font-size:clamp(20px,2.2vw,24px);font-weight:800}
+.exts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ex{min-height:72px;border-radius:16px;border:3px solid var(--line);background:var(--panel);font-size:clamp(26px,3.2vw,34px);font-weight:800;line-height:1;padding:6px 4px}
+.ex small{display:block;font-size:clamp(16px,1.7vw,19px);font-weight:500;color:var(--dim);margin-top:5px}
+.ex[aria-pressed="true"]{background:var(--ivory);color:var(--ink);border-color:var(--ivory)}
+.ex[aria-pressed="true"] small{color:#4a5468}
+.ex:disabled{opacity:.4;cursor:default}
+.g-root h2{color:var(--root)} .g-3 h2{color:var(--third)} .g-5 h2{color:var(--fifth)}
+.plain{min-height:64px;border-radius:16px;border:2px solid var(--line);background:var(--panel);font-size:clamp(21px,2.4vw,26px);font-weight:800}
+.plain[aria-pressed="true"]{background:var(--ivory);color:var(--ink);border-color:var(--ivory)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:clamp(18px,2vw,22px);justify-content:center}
+.legend i{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:-6px;margin-right:6px}
+footer{font-size:17px;color:var(--dim);line-height:1.6}
+footer a{color:inherit;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Extensions <span>in E</span></h1>
+    <p class="lede">Pick a shape. Pick an extension. Hear it over the low E string, then go back and forth.</p>
+  </header>
+
+  <div class="two" id="qual">
+    <button class="tog" data-q="0" type="button">Major</button>
+    <button class="tog" data-q="1" type="button">Minor</button>
+  </div>
+  <div class="three" id="shapes"></div>
+
+  <section class="board" aria-live="polite">
+    <div class="name" id="name">E</div>
+    <div id="neck"></div>
+    <div class="legend" id="legend"></div>
+    <div class="say" id="say"></div>
+  </section>
+
+  <div class="play">
+    <button class="big hear" id="hear" type="button">&#9654; Hear it</button>
+    <button class="big bf" id="bf" type="button">&#8644; Back and forth</button>
+    <button class="big all" id="all" type="button" aria-pressed="false">&#9654; Play them all</button>
+  </div>
+
+  <button class="plain" id="plain" type="button">Just the triad</button>
+  <div id="groups"></div>
+
+  <footer>Street Guitar Book 2, Chapter 1 · Lessons with David · <a href="https://guitarlessonswithdavid.com">guitarlessonswithdavid.com</a><br>
+  <span style="opacity:.7;font-size:.85em">Guitar sounds: tonejs-instruments recordings (CC BY 3.0)</span></footer>
+</div>
+
+<script>
+/* Book 2, Chapter 1, "Triads and Extensions", in E with the open low E as the bass,
+   the way David teaches it. No sharp or flat extensions (David, 2026-10-03). */
+var OPEN=[55,59,64], SNAME=["G","B","E"], BASS=40;
+/* E major on the G, B, E strings, low on the neck to high. order = what each string holds. */
+var SHAPES=[
+  {name:"2nd inversion", short:"2nd inv.", order:["5","R","3"], frets:[4,5,4]},
+  {name:"Root position", short:"Root pos.", order:["R","3","5"], frets:[9,9,7]},
+  {name:"1st inversion", short:"1st inv.", order:["3","5","R"], frets:[13,12,12]}
+];
+/* tone: the chord tone it takes the place of. off: frets from that tone
+   (for the 3rd, measured from the MAJOR 3rd, as the book does). semis: from the root. */
+var EXTS=[
+  {id:"maj7",lab:"maj7",tone:"R",off:-1,semis:11,maj:"Emaj7",min:"Em(maj7)",tell:"The <b>major 7</b> is <b>1 fret below the root</b>."},
+  {id:"7r",  lab:"7",   tone:"R",off:-2,semis:10,maj:"E7",   min:"Em7",     tell:"The <b>7</b> is <b>2 frets below the root</b>."},
+  {id:"9",   lab:"9",   tone:"R",off:2, semis:2, maj:"Eadd9",min:"Em(add9)",tell:"The <b>9</b> is <b>2 frets above the root</b>. Same note as the 2."},
+  {id:"sus2",lab:"sus2",tone:"3",off:-2,semis:2, maj:"Esus2",min:"Esus2",   tell:"<b>sus2</b>: no 3rd. The 2 is <b>2 frets below the major 3rd</b>."},
+  {id:"sus4",lab:"sus4",tone:"3",off:1, semis:5, maj:"Esus4",min:"Esus4",   tell:"<b>sus4</b>: no 3rd. The 4 is <b>1 fret above the major 3rd</b>."},
+  {id:"11",  lab:"11",  tone:"5",off:-2,semis:5, maj:null,   min:"Em11",    tell:"The <b>11</b> is <b>2 frets below the 5th</b>. Only with a minor chord."},
+  {id:"6",   lab:"6",   tone:"5",off:2, semis:9, maj:"E6",   min:"Em6",     tell:"The <b>6</b> is <b>2 frets above the 5th</b>. Same note as the 13."},
+  {id:"7f",  lab:"7",   tone:"5",off:3, semis:10,maj:"E7",   min:"Em7",     tell:"The <b>7</b> is <b>3 frets above the 5th</b>."}
+];
+var GROUPS=[["R","Replace the root","g-root"],["3","Replace the 3rd","g-3"],["5","Replace the 5th","g-5"]];
+var S={minor:false, shape:1, ext:null};
+var $=function(id){return document.getElementById(id);};
+
+/* frets of the plain triad for a shape (minor = 3rd down a fret) */
+function triadFrets(sh,minor){ return sh.frets.map(function(f,i){ return f-(minor&&sh.order[i]==="3"?1:0); }); }
+function extOK(e,minor){ return minor || e.maj!==null; }
+/* the chord with one extension: returns {frets, order, extString, ghostFret} */
+function voicing(shIdx,minor,extId){
+  var sh=SHAPES[shIdx], fr=triadFrets(sh,minor), order=sh.order.slice(), out={frets:fr.slice(),order:order,ext:-1,ghost:null};
+  if(!extId) return out;
+  var e=EXTS.filter(function(x){return x.id===extId;})[0], s=sh.order.indexOf(e.tone);
+  var from=sh.frets[s]; /* major-chord fret: for the 3rd this is the major 3rd */
+  out.ghost=fr[s]; out.frets[s]=from+e.off; out.order[s]=e.lab; out.ext=s;
+  return out;
+}
+function chordName(){
+  if(!S.ext) return S.minor?"Em":"E";
+  var e=EXTS.filter(function(x){return x.id===S.ext;})[0];
+  return S.minor?e.min:e.maj;
+}
+
+/* ---------- drawing ---------- */
+function color(t,isExt){ if(isExt) return "var(--ext)"; return t==="R"?"var(--root)":t==="5"?"var(--fifth)":(S.minor?"var(--minor)":"var(--third)"); }
+function neck(v){
+  var all=v.frets.concat(v.ghost==null?[]:[v.ghost]);
+  var lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
+  var start=Math.max(1,lo-1), span=Math.max(6,hi-start+2);
+  var W=360,left=46,right=10,top=14,gap=22,H=top+gap*5+40,cw=(W-left-right)/span;
+  var y=function(str){return top+gap*str;}; /* str 0 = high E at top */
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+v.order.map(function(t,i){return SNAME[i]+" string, fret "+v.frets[i]+", "+t;}).join("; ")+'; open low E string as the bass">';
+  s+='<rect x="'+left+'" y="'+(top-8)+'" width="'+(W-left-right)+'" height="'+(gap*5+16)+'" rx="4" fill="var(--wood)"/>';
+  for(var f=0;f<=span;f++){ var x=left+f*cw; s+='<line x1="'+x+'" y1="'+(top-8)+'" x2="'+x+'" y2="'+(top+gap*5+8)+'" stroke="var(--fret)" stroke-width="'+(f===0&&start===1?6:2)+'"/>'; }
+  var names=["E","B","G","D","A","E"];
+  for(var str=0;str<6;str++){ s+='<line x1="'+left+'" y1="'+y(str)+'" x2="'+(W-right)+'" y2="'+y(str)+'" stroke="#CFC6B6" stroke-width="'+(1+str*0.35)+'"/>'; }
+  /* open low E: the bass note */
+  s+='<circle cx="'+(left-22)+'" cy="'+y(5)+'" r="11" fill="none" stroke="var(--brass)" stroke-width="3"/>';
+  s+='<text x="'+(left-22)+'" y="'+(y(5)+6)+'" text-anchor="middle" font-size="16" font-weight="800" fill="var(--brass)">E</text>';
+  for(var f2=1;f2<=span;f2++){ var fn=start+f2-1; s+='<text x="'+(left+(f2-.5)*cw)+'" y="'+(top+gap*5+32)+'" text-anchor="middle" font-size="15" fill="var(--dim)" font-weight="800">'+fn+'</text>'; }
+  var cx=function(f){return left+(f-start+.5)*cw;}, r=Math.min(cw*.46,12.5);
+  /* the note the extension took the place of, as a dashed ring */
+  if(v.ext>=0){ var gs=2-v.ext; s+='<circle cx="'+cx(v.ghost)+'" cy="'+y(gs)+'" r="'+r+'" fill="none" stroke="'+color(SHAPES[S.shape].order[v.ext],false)+'" stroke-width="2.5" stroke-dasharray="4 3"/>'; }
+  for(var i=0;i<3;i++){ var strI=2-i, isExt=i===v.ext, t=v.order[i];
+    s+='<circle cx="'+cx(v.frets[i])+'" cy="'+y(strI)+'" r="'+r+'" fill="'+color(t,isExt)+'"'+(isExt?' stroke="var(--brass)" stroke-width="3"':'')+'/>';
+    s+='<text x="'+cx(v.frets[i])+'" y="'+(y(strI)+5)+'" text-anchor="middle" font-size="'+(t.length>2?10:t.length>1?12:15)+'" font-weight="800" fill="var(--ink)">'+t+'</text>'; }
+  return s+'</svg>';
+}
+function legend(){
+  var h='<span><i style="background:var(--root)"></i>Root</span><span><i style="background:'+(S.minor?"var(--minor)":"var(--third)")+'"></i>'+(S.minor?"Minor 3rd":"3rd")+'</span><span><i style="background:var(--fifth)"></i>5th</span>';
+  if(S.ext) h+='<span><i style="background:var(--ext);border:3px solid var(--brass)"></i>Extension</span>';
+  return h;
+}
+function render(){
+  [].forEach.call($("qual").children,function(b){ b.setAttribute("aria-pressed",String(+b.dataset.q===(S.minor?1:0))); });
+  [].forEach.call($("shapes").children,function(b,i){ b.setAttribute("aria-pressed",String(i===S.shape)); });
+  $("plain").setAttribute("aria-pressed",String(!S.ext));
+  EXTS.forEach(function(e){ var b=$("x-"+e.id); b.setAttribute("aria-pressed",String(S.ext===e.id)); b.disabled=!extOK(e,S.minor);
+    b.querySelector("small").textContent=extOK(e,S.minor)?(S.minor?e.min:e.maj):"minor only"; });
+  var v=voicing(S.shape,S.minor,S.ext);
+  $("name").textContent=chordName();
+  $("neck").innerHTML=neck(v);
+  $("legend").innerHTML=legend();
+  var e=S.ext&&EXTS.filter(function(x){return x.id===S.ext;})[0];
+  $("say").innerHTML=e?e.tell:(SHAPES[S.shape].name+". Low E rings underneath. Now pick an extension.");
+}
+function build(){
+  $("shapes").innerHTML=SHAPES.map(function(sh,i){ return '<button class="tog" type="button" data-i="'+i+'">'+sh.short+'<small>frets '+Math.min.apply(null,sh.frets)+'&ndash;'+Math.max.apply(null,sh.frets)+'</small></button>'; }).join("");
+  [].forEach.call($("shapes").children,function(b){ b.onclick=function(){ stopAll(); S.shape=+b.dataset.i; render(); hear(); }; });
+  [].forEach.call($("qual").children,function(b){ b.onclick=function(){ stopAll(); S.minor=b.dataset.q==="1"; if(S.ext&&!extOK(EXTS.filter(function(x){return x.id===S.ext;})[0],S.minor)) S.ext=null; render(); hear(); }; });
+  $("groups").innerHTML=GROUPS.map(function(g){
+    return '<div class="group '+g[2]+'" style="margin-bottom:16px"><h2>'+g[1]+'</h2><div class="exts">'+
+      EXTS.filter(function(e){return e.tone===g[0];}).map(function(e){ return '<button class="ex" type="button" id="x-'+e.id+'">'+e.lab+'<small></small></button>'; }).join("")+'</div></div>';
+  }).join("");
+  EXTS.forEach(function(e){ $("x-"+e.id).onclick=function(){ stopAll(); S.ext=e.id; render(); backForth(); }; });
+  $("plain").onclick=function(){ stopAll(); S.ext=null; render(); hear(); };
+  $("hear").onclick=function(){ stopAll(); hear(); };
+  $("bf").onclick=function(){ stopAll(); backForth(); };
+  $("all").onclick=function(){ if(tour) stopAll(); else playAll(); };
+}
+
+/* ---------- sound ---------- */
+/* Real recorded acoustic guitar notes (tonejs-instruments, CC BY 3.0) in sounds/.
+   Notes above the highest recording play it a little faster. Until a note has loaded,
+   a plucked-string synth plays so the page is never silent. */
+var LOW=55, HIGH=74, NOTES=[BASS];
+for(var m0=LOW;m0<=HIGH;m0++) NOTES.push(m0);
+var ctx=null,cache={},SAMPLES={},__sLoading=false,bus=null,ringing=[],bassRing=[];
+function loadSamples(){
+  if(__sLoading||!ctx||!window.fetch) return; __sLoading=true;
+  NOTES.forEach(function(m){
+    fetch("sounds/"+m+".mp3").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(function(a){ ctx.decodeAudioData(a,function(b){ SAMPLES[m]=b; },function(){}); })
+      .catch(function(){});
+  });
+}
+function makeBus(){
+  var out=ctx.createGain(); out.gain.value=1; out.connect(ctx.destination);
+  var dry=ctx.createGain(); dry.gain.value=1; dry.connect(out);
+  var sr=ctx.sampleRate,len=Math.floor(sr*1.3),ir=ctx.createBuffer(2,len,sr);
+  for(var c=0;c<2;c++){ var d=ir.getChannelData(c); for(var i=0;i<len;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2)*(i<sr*0.012?i/(sr*0.012):1); } }
+  var verb=ctx.createConvolver(); verb.buffer=ir;
+  var tone=ctx.createBiquadFilter(); tone.type="lowpass"; tone.frequency.value=4200;
+  var wet=ctx.createGain(); wet.gain.value=0.16;
+  dry.connect(verb); verb.connect(tone); tone.connect(wet); wet.connect(out);
+  return dry;
+}
+try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
+var __unlocked=false;
+function ensureAudio(){
+  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false; ctx=new AC(); bus=makeBus(); }
+  if(ctx.state!=="running"){ try{ ctx.resume(); }catch(e){} }
+  loadSamples();
+  if(!__unlocked){
+    __unlocked=true;
+    try{ var bb=ctx.createBuffer(1,1,22050), ss=ctx.createBufferSource(); ss.buffer=bb; ss.connect(ctx.destination); ss.start(0); }catch(e){}
+    try{
+      var el=document.createElement("audio"); el.setAttribute("playsinline",""); el.setAttribute("x-webkit-airplay","deny");
+      el.loop=true; el.preload="auto";
+      el.src="data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
+      var pp=el.play(); if(pp&&pp.catch) pp.catch(function(){});
+    }catch(e){}
+  }
+  return true;
+}
+["touchend","pointerup","click","keydown"].forEach(function(ev){
+  document.addEventListener(ev,function(){ ensureAudio(); },{passive:true,capture:true});
+});
+document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ctx&&ctx.state!=="running"){ try{ctx.resume();}catch(e){} } });
+
+function fq(m){ return 440*Math.pow(2,(m-69)/12); }
+function synth(m){
+  if(cache[m])return cache[m];
+  var sr=ctx.sampleRate,N=Math.max(2,Math.round(sr/fq(m))),len=Math.floor(sr*2.2);
+  var b=ctx.createBuffer(1,len,sr),d=b.getChannelData(0),p=0;
+  for(var i=0;i<N;i++){ var n=Math.random()*2-1; p=0.55*n+0.45*p; d[i]=p; }
+  for(var j=N;j<len;j++){ d[j]=0.5*(d[j-N]+d[j-N+1])*0.99975; }
+  var a=Math.floor(sr*0.004); for(var k=0;k<a;k++) d[k]*=k/a;
+  cache[m]=b; return b;
+}
+/* the nearest recording at or below the note, played faster to reach it */
+function baseFor(m){ if(m===BASS) return BASS; return Math.max(LOW,Math.min(m,HIGH)); }
+function pluck(m,t,vel,keep){
+  var src=ctx.createBufferSource(), base=baseFor(m), real=!!SAMPLES[base];
+  if(real){ src.buffer=SAMPLES[base]; src.playbackRate.value=Math.pow(2,(m-base)/12); }
+  else src.buffer=synth(m);
+  var g=ctx.createGain(), peak=(real?0.75:0.35)*vel;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(peak,t+0.004);
+  g.gain.setValueAtTime(peak,t+3.2);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+4.0);
+  src.connect(g); g.connect(bus);
+  src.start(t); src.stop(t+4.05);
+  (keep?bassRing:ringing).push({g:g,src:src,end:t+4.05});
+}
+function dampList(list,t){
+  list.forEach(function(n){ if(n.end>t){ try{ n.g.gain.cancelScheduledValues(t); n.g.gain.setValueAtTime(n.g.gain.value||0.3,t); n.g.gain.exponentialRampToValueAtTime(0.0008,t+0.09); n.src.stop(t+0.1); }catch(e){} } });
+}
+/* a new strum lifts the fingers off the old chord; with a new bass note the old bass stops too */
+function damp(t,bassToo){ dampList(ringing,t); ringing=[]; if(bassToo){ dampList(bassRing,t); bassRing=[]; } }
+function midis(v){ return v.frets.map(function(f,i){ return OPEN[i]+f; }); }
+/* low E first, then a down-strum G, B, E. withBass=false keeps the bass ringing. */
+function strumAt(v,t,withBass){
+  if(withBass){ damp(t,true); pluck(BASS,t,0.95,true); } else damp(t);
+  var at=t+(withBass?0.06:0);
+  midis(v).forEach(function(m,i){ pluck(m,at,(i===0?1:0.86)*(0.92+Math.random()*0.08),false); at+=0.032+Math.random()*0.022; });
+}
+var timers=[], tour=null;
+function clearTimers(){ timers.forEach(clearTimeout); timers=[]; }
+function stopAll(){ clearTimers(); if(tour){ tour=null; $("all").setAttribute("aria-pressed","false"); $("all").innerHTML="&#9654; Play them all"; } if(ctx) damp(ctx.currentTime+0.01,true); }
+function hear(){ if(!ensureAudio()) return; var t=ctx.currentTime+0.04; strumAt(voicing(S.shape,S.minor,S.ext),t,true); }
+/* Book 1's method: back and forth between the chord tone and the extension, end on the chord tone */
+function sequence(steps,gapS,done){
+  if(!ensureAudio()) return; clearTimers();
+  /* each strum is started on time by a timer, so damping the last chord happens at that moment */
+  steps.forEach(function(st,k){
+    timers.push(setTimeout(function(){
+      strumAt(st.v,ctx.currentTime+0.03,k===0||st.bass);
+      if(st.show) st.show();
+    }, k*gapS*1000));
+  });
+  if(done) timers.push(setTimeout(done,steps.length*gapS*1000));
+}
+function backForth(){
+  var plain=voicing(S.shape,S.minor,null);
+  if(!S.ext){ hear(); return; }
+  var ext=voicing(S.shape,S.minor,S.ext);
+  sequence([{v:plain,bass:true},{v:ext},{v:plain,bass:true},{v:ext},{v:plain,bass:true}],1.3);
+}
+/* every shape with every extension: triad, then the extension, then on to the next */
+function playAll(){
+  stopAll(); var list=[];
+  SHAPES.forEach(function(sh,si){ EXTS.forEach(function(e){ if(extOK(e,S.minor)) list.push([si,e.id]); }); });
+  tour={i:0,list:list}; $("all").setAttribute("aria-pressed","true"); $("all").innerHTML="&#9632; Stop";
+  (function step(){
+    if(!tour) return;
+    if(tour.i>=tour.list.length){ stopAll(); return; }
+    var it=tour.list[tour.i++], si=it[0], id=it[1];
+    S.shape=si; S.ext=null; render();
+    sequence([{v:voicing(si,S.minor,null),bass:true},
+              {v:voicing(si,S.minor,id),show:function(){ S.ext=id; render(); }}],1.6,function(){ timers.push(setTimeout(step,700)); });
+  })();
+}
+window.__ext={SHAPES:SHAPES,EXTS:EXTS,voicing:voicing,triadFrets:triadFrets,extOK:extOK,midis:midis,OPEN:OPEN,S:S,render:render};
+build(); render();
+</script>
+</body>
+</html>
