@@ -158,7 +158,7 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
     <p class="note">You get one bar of clicks first, then it loops. No sound on an iPhone? Flip the silent switch off.</p>
   </div>
 
-  <footer>Lessons with David · guitarlessonswithdavid.com<br><span style="opacity:.6;font-size:.8em">Guitar sounds: FluidR3 GM (CC BY 3.0)</span></footer>
+  <footer>Lessons with David · <a href="https://guitarlessonswithdavid.com" style="color:inherit;font-weight:800;text-decoration:underline">guitarlessonswithdavid.com</a><br><span style="opacity:.6;font-size:.8em">Guitar sounds: tonejs-instruments, public domain recordings (CC BY 3.0)</span></footer>
 </div>
 
 <script>
@@ -232,7 +232,7 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
       for(var i=0;i<6;i++) bufs[i]=pluck(FREQS[i]);
       if(window.fetch) MIDIS.forEach(function(m,i){
         fetch('sounds/'+m+'.mp3').then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
-          .then(function(a){ ctx.decodeAudioData(a,function(b){ bufs[i]=b; bufGain[i]=7; },function(){}); })
+          .then(function(a){ ctx.decodeAudioData(a,function(b){ bufs[i]=b; bufGain[i]=1.13; },function(){}); })
           .catch(function(){});
       });
     }

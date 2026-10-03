@@ -76,7 +76,7 @@ footer{font-family:var(--mono);font-size:13px;color:var(--dim)}
 
   <section class="grid" id="grid" aria-label="Interval answers"></section>
 
-  <footer>Lessons with David.</footer>
+  <footer>Lessons with David · <a href="https://guitarlessonswithdavid.com" style="color:inherit;font-weight:800;text-decoration:underline">guitarlessonswithdavid.com</a><br><span style="opacity:.6;font-size:.8em">Guitar sounds: tonejs-instruments, public domain recordings (CC BY 3.0)</span></footer>
 </div>
 
 <script>
@@ -111,8 +111,19 @@ function audio(){
   if(ctx.state==="suspended")ctx.resume();
   return ctx;
 }
+/* Real recorded acoustic guitar notes (tonejs-instruments, CC BY 3.0) in sounds/.
+   Until they load, the old built-in tone plays so the page is never silent. */
+const SAMPLES={}; let loading=false;
+function loadSamples(c){ if(loading||!window.fetch) return; loading=true;
+  for(let m=48;m<=71;m++) fetch('sounds/'+m+'.mp3').then(r=>{ if(!r.ok) throw 0; return r.arrayBuffer(); })
+    .then(a=>c.decodeAudioData(a,b=>{ SAMPLES[m]=b; },()=>{})).catch(()=>{});
+}
 function tone(midi,t){
-  const c=audio(), f=440*Math.pow(2,(midi-69)/12);
+  const c=audio(); loadSamples(c);
+  if(SAMPLES[midi]){ const s=c.createBufferSource(), g=c.createGain(); s.buffer=SAMPLES[midi];
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.9,t+.005); g.gain.setValueAtTime(.9,t+1.9); g.gain.exponentialRampToValueAtTime(.001,t+2.6);
+    s.connect(g); g.connect(c.destination); s.start(t); s.stop(t+2.65); return; }
+  const f=440*Math.pow(2,(midi-69)/12);
   const out=c.createGain(); out.gain.setValueAtTime(0,t);
   out.gain.linearRampToValueAtTime(.32,t+.012);
   out.gain.exponentialRampToValueAtTime(.001,t+1.6);

@@ -130,7 +130,7 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
     <p class="note">One bar of clicks first, then all 8 bars loop. No sound on an iPhone? Flip the silent switch off.</p>
   </div>
 
-  <footer>Lessons with David · guitarlessonswithdavid.com<br><span style="opacity:.6;font-size:.8em">Guitar sounds: FluidR3 GM (CC BY 3.0)</span></footer>
+  <footer>Lessons with David · <a href="https://guitarlessonswithdavid.com" style="color:inherit;font-weight:800;text-decoration:underline">guitarlessonswithdavid.com</a><br><span style="opacity:.6;font-size:.8em">Guitar sounds: tonejs-instruments, public domain recordings (CC BY 3.0)</span></footer>
 </div>
 
 <script>
@@ -231,7 +231,7 @@ button:focus-visible{outline:4px solid var(--hi);outline-offset:3px}
     var v=voices[s];
     if(v){ v.g.gain.setTargetAtTime(0,t,0.015); try{v.src.stop(t+0.12);}catch(e){} }
     var src=ctx.createBufferSource(); src.buffer=bufs[m];
-    var g=ctx.createGain(); g.gain.setValueAtTime(vol*(loaded[m]?7:1),t);
+    var g=ctx.createGain(); g.gain.setValueAtTime(vol*(loaded[m]?1.13:1),t);
     if(ringFor) g.gain.setTargetAtTime(0,t+ringFor,0.035);
     src.connect(g); g.connect(tone); src.start(t);
     voices[s]={src:src,g:g};

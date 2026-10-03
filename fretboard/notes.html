@@ -131,7 +131,7 @@
   <footer>
     <span>&copy; 2026 David E. Dunavant, M.M. All rights reserved.</span>
     <span><a href="https://guitarlessonswithdavid.com">guitarlessonswithdavid.com</a></span>
-    <span style="opacity:.6;font-size:.8em">Guitar sounds: FluidR3 GM (CC BY 3.0)</span>
+    <span style="opacity:.6;font-size:.8em">Guitar sounds: tonejs-instruments, public domain recordings (CC BY 3.0)</span>
   </footer>
 </div>
 
@@ -164,7 +164,7 @@ var ctx=null,cache={};
 var SAMPLES={},__sLoading=false;
 function loadSamples(){
   if(__sLoading||!ctx||!window.fetch) return; __sLoading=true;
-  for(var m=36;m<=88;m++)(function(m){
+  for(var m=38;m<=74;m++)(function(m){
     fetch("sounds/"+m+".mp3").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
       .then(function(a){ ctx.decodeAudioData(a,function(b){ SAMPLES[m]=b; },function(){}); })
       .catch(function(){});
@@ -175,6 +175,7 @@ document.addEventListener("pointerdown",function(){
   loadSamples();
 },{passive:true,capture:true});
 
+function sampleFor(m){ var b=Math.max(38,Math.min(74,m)); return SAMPLES[b]?{b:SAMPLES[b],r:Math.pow(2,(m-b)/12)}:null; }
 function fq(m){ return 440*Math.pow(2,(m-69)/12); }
 function buf(m){
   if(SAMPLES[m])return SAMPLES[m];
@@ -192,12 +193,13 @@ function pluck(m){
   if(ctx.state==="suspended")ctx.resume();
   loadSamples();
   var t=ctx.currentTime;
-  var src=ctx.createBufferSource(); src.buffer=buf(m);
-  var real=src.buffer===SAMPLES[m];
+  var src=ctx.createBufferSource(), sf=sampleFor(m); src.buffer=sf?sf.b:buf(m);
+  if(sf) src.playbackRate.value=sf.r;
+  var real=!!sf;
   var f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=real?8000:3400;
   var g=ctx.createGain();
   g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(real?2.2:0.55,t+0.006);
+  g.gain.exponentialRampToValueAtTime(real?0.36:0.55,t+0.006);
   g.gain.exponentialRampToValueAtTime(0.0008,t+2.0);
   src.connect(f); f.connect(g); g.connect(ctx.destination);
   src.start(t); src.stop(t+2.1);
