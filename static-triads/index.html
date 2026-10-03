@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Static Triads · Lessons with David</title>
+<meta name="description" content="One triad shape that never moves while the chords move under it. Hear both together.">
+<link rel="icon" href="../favicon.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Static Triads">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --ink:#0E1420; --panel:#182235; --panel2:#1F2B42; --line:#2C3A56;
+  --brass:#D2AE63; --ivory:#F3EEE4; --dim:#A9B4C8;
+  --root:#D2AE63; --third:#5CC592; --fifth:#8FB4F0; --ext:#F3EEE4;
+  --wood:#2A2018; --fret:#8B7A66;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--ink);color:var(--ivory);font-family:var(--display)}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1000px;margin:0 auto;padding:clamp(16px,3vw,36px) 16px;display:flex;flex-direction:column;gap:clamp(16px,2.4vw,26px)}
+h1{font-size:clamp(38px,6vw,68px);font-weight:800;line-height:1;margin:0}
+h1 span{color:var(--brass)}
+.lede{font-size:clamp(20px,2.2vw,24px);line-height:1.35;color:var(--dim);margin:8px 0 0}
+button{font:inherit;cursor:pointer;color:var(--ivory)}
+button:focus-visible{outline:3px solid var(--ivory);outline-offset:3px}
+h2{margin:0 0 8px;font-size:clamp(20px,2.2vw,24px);font-weight:800;color:var(--dim)}
+.four{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.chord{min-height:84px;border-radius:18px;border:3px solid var(--line);background:var(--panel);font-size:clamp(30px,4vw,40px);font-weight:800;padding:6px}
+.chord[aria-current="true"]{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.tog{min-height:72px;border-radius:18px;border:2px solid var(--line);background:var(--panel);font-size:clamp(21px,2.5vw,27px);font-weight:800;padding:8px 4px;line-height:1.1}
+.tog small{display:block;font-size:.7em;font-weight:500;color:var(--dim)}
+.tog[aria-pressed="true"]{background:var(--ivory);border-color:var(--ivory);color:var(--ink)}
+.tog[aria-pressed="true"] small{color:#4a5468}
+.board{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:clamp(14px,2vw,22px);display:flex;flex-direction:column;gap:10px}
+.name{font-size:clamp(40px,7vw,72px);font-weight:800;line-height:1;text-align:center}
+.name span{color:var(--brass)}
+.say{font-size:clamp(21px,2.4vw,26px);line-height:1.3;text-align:center;color:var(--dim);min-height:2.6em}
+.say b{color:var(--ivory)}
+svg{width:100%;height:auto;display:block}
+#neck{width:100%;max-width:640px;margin:0 auto}
+.big{min-height:84px;width:100%;border:none;border-radius:20px;font-size:clamp(24px,3vw,32px);font-weight:800;padding:10px;background:var(--brass);color:var(--ink)}
+.big[aria-pressed="true"]{background:#E57C62}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:clamp(18px,2vw,22px);justify-content:center}
+.legend i{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:-6px;margin-right:6px}
+footer{font-size:17px;color:var(--dim);line-height:1.6}
+footer a{color:inherit;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Static <span>Triads</span></h1>
+    <p class="lede">Your shape never moves. The chords move under it. The same 3 notes get a new job on every chord.</p>
+  </header>
+
+  <button class="big" id="go" type="button" aria-pressed="false">&#9654; Play the loop</button>
+
+  <section>
+    <h2>Tap a chord</h2>
+    <div class="four" id="chords"></div>
+  </section>
+
+  <section class="board" aria-live="polite">
+    <div class="name" id="name">Over <span>Am</span></div>
+    <div id="neck"></div>
+    <div class="legend" id="legend"></div>
+    <div class="say" id="say"></div>
+  </section>
+
+  <section>
+    <h2>What you hear</h2>
+    <div class="three" id="mix"></div>
+  </section>
+
+  <section>
+    <h2>Pick your shape</h2>
+    <div class="three" id="shapes"></div>
+  </section>
+
+  <footer>Street Guitar Book 2, Chapter 1 · Lessons with David · <a href="https://guitarlessonswithdavid.com">guitarlessonswithdavid.com</a><br>
+  <span style="opacity:.7;font-size:.85em">Guitar sounds: tonejs-instruments recordings (CC BY 3.0)</span></footer>
+</div>
+
+<script>
+/* Book 2, Chapter 1, "Static triads": Am - G - Dm - Am with ONE shape that never moves.
+   The shape is E, A, B (Am sus2). Over G it is the 6, 2, 3rd; over Dm the 2, 5th, 6. */
+var OPEN=[55,59,64], SNAME=["G","B","E"];
+/* the moving chords, as open chords from Book 1 (G is the four-finger 320033 shape) */
+var CHORDS=[
+  {name:"Am", root:9, notes:[45,52,57,60,64], bass:{str:4,fret:0}},
+  {name:"G",  root:7, notes:[43,47,50,55,62,67], bass:{str:5,fret:3}},
+  {name:"Dm", root:2, notes:[50,57,62,65], bass:{str:3,fret:0}},
+  {name:"Am", root:9, notes:[45,52,57,60,64], bass:{str:4,fret:0}}
+];
+/* the static shape, all three inversions on G, B, E. frets low string to high string */
+var SHAPES=[
+  {name:"Low",  frets:[4,5,5]},
+  {name:"Book", frets:[9,10,7]},
+  {name:"High", frets:[14,12,12]}
+];
+var LAB={0:"R",2:"2",3:"3",4:"3",5:"4",7:"5",9:"6",10:"7",11:"maj7"};
+var WORD={R:"the <b>root</b>","2":"the <b>2</b>","3":"the <b>3rd</b>","4":"the <b>4</b>","5":"the <b>5th</b>","6":"the <b>6</b>","7":"the <b>7</b>",maj7:"the <b>maj7</b>"};
+var MIX=[["chords","Chords","the moving part"],["shape","Your shape","never moves"],["both","Both","together"]];
+var S={chord:0, shape:1, mix:"both"};
+var $=function(id){return document.getElementById(id);};
+
+function shapeMidis(si){ return SHAPES[si].frets.map(function(f,i){ return OPEN[i]+f; }); }
+/* what each note of the shape is over a chord, low string to high */
+function labels(si,ci){ var r=CHORDS[ci].root; return shapeMidis(si).map(function(m){ return LAB[((m%12)-r+12)%12]; }); }
+
+/* ---------- drawing ---------- */
+function color(t){ return t==="R"?"var(--root)":t==="3"?"var(--third)":t==="5"?"var(--fifth)":"var(--ext)"; }
+function neck(){
+  var fr=SHAPES[S.shape].frets, lab=labels(S.shape,S.chord), bass=CHORDS[S.chord].bass;
+  var lo=Math.min.apply(null,fr), hi=Math.max.apply(null,fr);
+  var start=Math.max(1,lo-1), span=Math.max(6,hi-start+2);
+  var W=360,left=46,right=10,top=14,gap=22,H=top+gap*5+40,cw=(W-left-right)/span;
+  var y=function(str){return top+gap*str;}; /* str 0 = high E at top */
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+lab.map(function(t,i){return SNAME[i]+" string, fret "+fr[i]+", "+t;}).join("; ")+'">';
+  s+='<rect x="'+left+'" y="'+(top-8)+'" width="'+(W-left-right)+'" height="'+(gap*5+16)+'" rx="4" fill="var(--wood)"/>';
+  for(var f=0;f<=span;f++){ var x=left+f*cw; s+='<line x1="'+x+'" y1="'+(top-8)+'" x2="'+x+'" y2="'+(top+gap*5+8)+'" stroke="var(--fret)" stroke-width="'+(f===0&&start===1?6:2)+'"/>'; }
+  for(var str=0;str<6;str++){ s+='<line x1="'+left+'" y1="'+y(str)+'" x2="'+(W-right)+'" y2="'+y(str)+'" stroke="#CFC6B6" stroke-width="'+(1+str*0.35)+'"/>'; }
+  /* the bass note of the moving chord, as a ring beside the neck */
+  var bn=CHORDS[S.chord].name.charAt(0);
+  s+='<circle cx="'+(left-22)+'" cy="'+y(bass.str)+'" r="11" fill="none" stroke="var(--brass)" stroke-width="3"/>';
+  s+='<text x="'+(left-22)+'" y="'+(y(bass.str)+6)+'" text-anchor="middle" font-size="16" font-weight="800" fill="var(--brass)">'+bn+'</text>';
+  for(var f2=1;f2<=span;f2++){ var fn=start+f2-1; s+='<text x="'+(left+(f2-.5)*cw)+'" y="'+(top+gap*5+32)+'" text-anchor="middle" font-size="15" fill="var(--dim)" font-weight="800">'+fn+'</text>'; }
+  var cx=function(f){return left+(f-start+.5)*cw;}, r=Math.min(cw*.46,12.5);
+  for(var i=0;i<3;i++){ var strI=2-i, t=lab[i];
+    s+='<circle cx="'+cx(fr[i])+'" cy="'+y(strI)+'" r="'+r+'" fill="'+color(t)+'"/>';
+    s+='<text x="'+cx(fr[i])+'" y="'+(y(strI)+5)+'" text-anchor="middle" font-size="'+(t.length>1?11:15)+'" font-weight="800" fill="var(--ink)">'+t+'</text>'; }
+  return s+'</svg>';
+}
+function legend(){
+  return '<span><i style="background:var(--root)"></i>Root</span><span><i style="background:var(--third)"></i>3rd</span><span><i style="background:var(--fifth)"></i>5th</span><span><i style="background:var(--ext)"></i>Extension</span>';
+}
+function say(){
+  var lab=labels(S.shape,S.chord), c=CHORDS[S.chord].name;
+  var list=WORD[lab[0]]+", "+WORD[lab[1]]+" and "+WORD[lab[2]];
+  var extra=c==="Am"?" Think: <b>Am sus2</b>.":c==="G"?" The 3rd of G is the 2 of Am.":" Same shape, still works.";
+  return "Over "+c+" your 3 notes are "+list+"."+extra;
+}
+function render(){
+  [].forEach.call($("chords").children,function(b,i){ b.setAttribute("aria-current",String(i===S.chord)); });
+  [].forEach.call($("mix").children,function(b){ b.setAttribute("aria-pressed",String(b.dataset.m===S.mix)); });
+  [].forEach.call($("shapes").children,function(b,i){ b.setAttribute("aria-pressed",String(i===S.shape)); });
+  $("name").innerHTML='Over <span>'+CHORDS[S.chord].name+'</span>';
+  $("neck").innerHTML=neck();
+  $("legend").innerHTML=legend();
+  $("say").innerHTML=say();
+}
+function build(){
+  $("chords").innerHTML=CHORDS.map(function(c,i){ return '<button class="chord" type="button" data-i="'+i+'">'+c.name+'</button>'; }).join("");
+  [].forEach.call($("chords").children,function(b){ b.onclick=function(){ stopLoop(); S.chord=+b.dataset.i; render(); bar(ctxNow(),S.chord); }; });
+  $("mix").innerHTML=MIX.map(function(m){ return '<button class="tog" type="button" data-m="'+m[0]+'">'+m[1]+'<small>'+m[2]+'</small></button>'; }).join("");
+  [].forEach.call($("mix").children,function(b){ b.onclick=function(){ S.mix=b.dataset.m; render(); if(!loop) bar(ctxNow(),S.chord); }; });
+  $("shapes").innerHTML=SHAPES.map(function(sh,i){ return '<button class="tog" type="button" data-i="'+i+'">'+sh.name+'<small>frets '+Math.min.apply(null,sh.frets)+'&ndash;'+Math.max.apply(null,sh.frets)+'</small></button>'; }).join("");
+  [].forEach.call($("shapes").children,function(b){ b.onclick=function(){ S.shape=+b.dataset.i; render(); if(!loop) bar(ctxNow(),S.chord); }; });
+  $("go").onclick=function(){ if(loop) stopLoop(); else startLoop(); };
+}
+
+/* ---------- sound ---------- */
+/* Real recorded acoustic guitar notes (tonejs-instruments, CC BY 3.0) in sounds/.
+   The top E (76) plays the 74 recording a little faster. Until a note has loaded,
+   a plucked-string synth plays so the page is never silent. */
+var NOTES=[43,45,47,50,52,55,57,59,60,62,64,65,67,69,71,74];
+var ctx=null,cache={},SAMPLES={},__sLoading=false,bus=null,ringing=[];
+function loadSamples(){
+  if(__sLoading||!ctx||!window.fetch) return; __sLoading=true;
+  NOTES.forEach(function(m){
+    fetch("sounds/"+m+".mp3").then(function(r){ if(!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(function(a){ ctx.decodeAudioData(a,function(b){ SAMPLES[m]=b; },function(){}); })
+      .catch(function(){});
+  });
+}
+function makeBus(){
+  var out=ctx.createGain(); out.gain.value=1; out.connect(ctx.destination);
+  var dry=ctx.createGain(); dry.gain.value=1; dry.connect(out);
+  var sr=ctx.sampleRate,len=Math.floor(sr*1.3),ir=ctx.createBuffer(2,len,sr);
+  for(var c=0;c<2;c++){ var d=ir.getChannelData(c); for(var i=0;i<len;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2)*(i<sr*0.012?i/(sr*0.012):1); } }
+  var verb=ctx.createConvolver(); verb.buffer=ir;
+  var tone=ctx.createBiquadFilter(); tone.type="lowpass"; tone.frequency.value=4200;
+  var wet=ctx.createGain(); wet.gain.value=0.16;
+  dry.connect(verb); verb.connect(tone); tone.connect(wet); wet.connect(out);
+  return dry;
+}
+try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
+var __unlocked=false;
+function ensureAudio(){
+  if(!ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false; ctx=new AC(); bus=makeBus(); }
+  if(ctx.state!=="running"){ try{ ctx.resume(); }catch(e){} }
+  loadSamples();
+  if(!__unlocked){
+    __unlocked=true;
+    try{ var bb=ctx.createBuffer(1,1,22050), ss=ctx.createBufferSource(); ss.buffer=bb; ss.connect(ctx.destination); ss.start(0); }catch(e){}
+    try{
+      var el=document.createElement("audio"); el.setAttribute("playsinline",""); el.setAttribute("x-webkit-airplay","deny");
+      el.loop=true; el.preload="auto";
+      el.src="data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
+      var pp=el.play(); if(pp&&pp.catch) pp.catch(function(){});
+    }catch(e){}
+  }
+  return true;
+}
+["touchend","pointerup","click","keydown"].forEach(function(ev){
+  document.addEventListener(ev,function(){ ensureAudio(); },{passive:true,capture:true});
+});
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden){ stopLoop(); return; }
+  if(ctx&&ctx.state!=="running"){ try{ctx.resume();}catch(e){} }
+});
+
+function fq(m){ return 440*Math.pow(2,(m-69)/12); }
+function synth(m){
+  if(cache[m])return cache[m];
+  var sr=ctx.sampleRate,N=Math.max(2,Math.round(sr/fq(m))),len=Math.floor(sr*2.2);
+  var b=ctx.createBuffer(1,len,sr),d=b.getChannelData(0),p=0;
+  for(var i=0;i<N;i++){ var n=Math.random()*2-1; p=0.55*n+0.45*p; d[i]=p; }
+  for(var j=N;j<len;j++){ d[j]=0.5*(d[j-N]+d[j-N+1])*0.99975; }
+  var a=Math.floor(sr*0.004); for(var k=0;k<a;k++) d[k]*=k/a;
+  cache[m]=b; return b;
+}
+function baseFor(m){ return m>74?74:m; }
+function pluck(m,t,vel){
+  var src=ctx.createBufferSource(), base=baseFor(m), real=!!SAMPLES[base];
+  if(real){ src.buffer=SAMPLES[base]; src.playbackRate.value=Math.pow(2,(m-base)/12); }
+  else src.buffer=synth(m);
+  var g=ctx.createGain(), peak=(real?0.62:0.3)*vel;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(peak,t+0.004);
+  g.gain.setValueAtTime(peak,t+3.2);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+4.0);
+  src.connect(g); g.connect(bus);
+  src.start(t); src.stop(t+4.05);
+  ringing.push({g:g,src:src,end:t+4.05});
+}
+/* a new chord lifts the fingers off the old one */
+function damp(t){
+  ringing.forEach(function(n){ if(n.end>t){ try{ n.g.gain.cancelScheduledValues(t); n.g.gain.setValueAtTime(n.g.gain.value||0.3,t); n.g.gain.exponentialRampToValueAtTime(0.0008,t+0.09); n.src.stop(t+0.1); }catch(e){} } });
+  ringing=[];
+}
+function strum(notes,t,vel){ var at=t; notes.forEach(function(m){ pluck(m,at,vel*(0.9+Math.random()*0.1)); at+=0.03+Math.random()*0.02; }); }
+var BEAT=0.62; /* about 97 beats a minute, 4 beats a chord */
+function ctxNow(){ return ensureAudio()?ctx.currentTime+0.04:0; }
+/* one bar: the chord strums on 1 and 3; your shape strums on 1, then picks low, middle, high */
+function bar(t,ci){
+  if(!ctx) return;
+  damp(t);
+  var c=CHORDS[ci], sh=shapeMidis(S.shape), ch=S.mix!=="shape", me=S.mix!=="chords";
+  if(ch){ strum(c.notes,t,0.62); strum(c.notes,t+2*BEAT,0.45); }
+  if(me){ strum(sh,t+(ch?0.2:0),0.95); pluck(sh[0],t+BEAT,0.85); pluck(sh[1],t+2*BEAT+(ch?0.1:0),0.85); pluck(sh[2],t+3*BEAT,0.85); }
+}
+var loop=null, timers=[];
+function startLoop(){
+  if(!ensureAudio()) return;
+  loop={next:ctx.currentTime+0.08, i:0};
+  $("go").setAttribute("aria-pressed","true"); $("go").innerHTML="&#9632; Stop";
+  (function tick(){
+    if(!loop) return;
+    /* schedule a bar just before it is due, so a change of shape or mix is heard next bar */
+    while(loop.next<ctx.currentTime+0.3){
+      var ci=loop.i%CHORDS.length, at=loop.next;
+      bar(at,ci);
+      timers.push(setTimeout(function(c){ return function(){ if(loop){ S.chord=c; render(); } }; }(ci), Math.max(0,(at-ctx.currentTime)*1000)));
+      loop.next+=4*BEAT; loop.i++;
+    }
+    timers.push(setTimeout(tick,100));
+  })();
+}
+function stopLoop(){
+  timers.forEach(clearTimeout); timers=[];
+  if(loop){ loop=null; $("go").setAttribute("aria-pressed","false"); $("go").innerHTML="&#9654; Play the loop"; }
+  if(ctx) damp(ctx.currentTime+0.01);
+}
+window.__st={CHORDS:CHORDS,SHAPES:SHAPES,labels:labels,shapeMidis:shapeMidis,S:S,render:render,bar:bar};
+build(); render();
+</script>
+</body>
+</html>
