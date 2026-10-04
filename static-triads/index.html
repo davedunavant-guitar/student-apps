@@ -94,10 +94,10 @@ footer a{color:inherit;font-weight:800}
 var OPEN=[55,59,64], SNAME=["G","B","E"];
 /* the moving chords, as open chords from Book 1 (G is the four-finger 320033 shape) */
 var CHORDS=[
-  {name:"Am", root:9, notes:[45,52,57,60,64], bass:{str:4,fret:0}},
-  {name:"G",  root:7, notes:[43,47,50,55,62,67], bass:{str:5,fret:3}},
-  {name:"Dm", root:2, notes:[50,57,62,65], bass:{str:3,fret:0}},
-  {name:"Am", root:9, notes:[45,52,57,60,64], bass:{str:4,fret:0}}
+  {name:"Am", root:9, tri:[9,0,4], notes:[45,52,57,60,64], bass:{str:4,fret:0}},
+  {name:"G",  root:7, tri:[7,11,2], notes:[43,47,50,55,62,67], bass:{str:5,fret:3}},
+  {name:"Dm", root:2, tri:[2,5,9], notes:[50,57,62,65], bass:{str:3,fret:0}},
+  {name:"Am", root:9, tri:[9,0,4], notes:[45,52,57,60,64], bass:{str:4,fret:0}}
 ];
 /* the static shape, all three inversions on G, B, E. frets low string to high string */
 var SHAPES=[
@@ -112,6 +112,18 @@ var S={chord:0, shape:1, mix:"both"};
 var $=function(id){return document.getElementById(id);};
 
 function shapeMidis(si){ return SHAPES[si].frets.map(function(f,i){ return OPEN[i]+f; }); }
+/* the chord's own triad on the same 3 strings, the voicing closest to your shape */
+function ghost(si,ci){
+  var me=SHAPES[si].frets, tri=CHORDS[ci].tri, best=null;
+  for(var a=0;a<=15;a++)for(var b=0;b<=15;b++)for(var c=0;c<=15;c++){
+    var f=[a,b,c], pcs=f.map(function(x,i){return (OPEN[i]+x)%12;});
+    if(tri.some(function(t){return pcs.indexOf(t)<0;})) continue;
+    var cost=0; for(var i=0;i<3;i++) cost+=Math.abs(f[i]-me[i]);
+    var sp=Math.max(a,b,c)-Math.min(a,b,c); cost+=sp*0.1;
+    if(!best||cost<best.cost) best={cost:cost,frets:f};
+  }
+  return best.frets;
+}
 /* what each note of the shape is over a chord, low string to high */
 function labels(si,ci){ var r=CHORDS[ci].root; return shapeMidis(si).map(function(m){ return LAB[((m%12)-r+12)%12]; }); }
 
@@ -119,9 +131,10 @@ function labels(si,ci){ var r=CHORDS[ci].root; return shapeMidis(si).map(functio
 function color(t){ return t==="R"?"var(--root)":t==="3"?"var(--third)":t==="5"?"var(--fifth)":"var(--ext)"; }
 function neck(){
   var fr=SHAPES[S.shape].frets, lab=labels(S.shape,S.chord), bass=CHORDS[S.chord].bass;
-  var lo=Math.min.apply(null,fr), hi=Math.max.apply(null,fr);
+  var gf=ghost(S.shape,S.chord), r0=CHORDS[S.chord].root, all=fr.concat(gf);
+  var lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
   var start=Math.max(1,lo-1), span=Math.max(6,hi-start+2);
-  var W=360,left=46,right=10,top=14,gap=22,H=top+gap*5+40,cw=(W-left-right)/span;
+  var W=360,left=46,right=10,top=22,gap=22,H=top+gap*5+40,cw=(W-left-right)/span;
   var y=function(str){return top+gap*str;}; /* str 0 = high E at top */
   var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+lab.map(function(t,i){return SNAME[i]+" string, fret "+fr[i]+", "+t;}).join("; ")+'">';
   s+='<rect x="'+left+'" y="'+(top-8)+'" width="'+(W-left-right)+'" height="'+(gap*5+16)+'" rx="4" fill="var(--wood)"/>';
@@ -133,18 +146,25 @@ function neck(){
   s+='<text x="'+(left-22)+'" y="'+(y(bass.str)+6)+'" text-anchor="middle" font-size="16" font-weight="800" fill="var(--brass)">'+bn+'</text>';
   for(var f2=1;f2<=span;f2++){ var fn=start+f2-1; s+='<text x="'+(left+(f2-.5)*cw)+'" y="'+(top+gap*5+32)+'" text-anchor="middle" font-size="15" fill="var(--dim)" font-weight="800">'+fn+'</text>'; }
   var cx=function(f){return left+(f-start+.5)*cw;}, r=Math.min(cw*.46,12.5);
+  /* the chord's own triad: a see-through gray shape behind yours */
+  var gp=gf.map(function(f,i){ return [f===0?left-9:cx(f), y(2-i)]; });
+  s+='<polygon points="'+gp.map(function(p){return p.join(",");}).join(" ")+'" fill="#B8C0CE" fill-opacity=".22" stroke="#B8C0CE" stroke-opacity=".55" stroke-width="'+(r*1.6)+'" stroke-linejoin="round"/>';
+  for(var g=0;g<3;g++){ var gt=LAB[((OPEN[g]+gf[g])%12-r0+12)%12];
+    s+='<circle cx="'+gp[g][0]+'" cy="'+gp[g][1]+'" r="'+(r+3)+'" fill="#B8C0CE" fill-opacity=".55" stroke="#DDE2EA" stroke-opacity=".8" stroke-width="2"/>';
+    if(fr[g]!==gf[g]) s+='<text x="'+gp[g][0]+'" y="'+(gp[g][1]+5)+'" text-anchor="middle" font-size="14" font-weight="800" fill="var(--ink)">'+gt+'</text>'; }
   for(var i=0;i<3;i++){ var strI=2-i, t=lab[i];
     s+='<circle cx="'+cx(fr[i])+'" cy="'+y(strI)+'" r="'+r+'" fill="'+color(t)+'"/>';
     s+='<text x="'+cx(fr[i])+'" y="'+(y(strI)+5)+'" text-anchor="middle" font-size="'+(t.length>1?11:15)+'" font-weight="800" fill="var(--ink)">'+t+'</text>'; }
   return s+'</svg>';
 }
 function legend(){
-  return '<span><i style="background:var(--root)"></i>Root</span><span><i style="background:var(--third)"></i>3rd</span><span><i style="background:var(--fifth)"></i>5th</span><span><i style="background:var(--ext)"></i>Extension</span>';
+  return '<span><i style="background:var(--root)"></i>Root</span><span><i style="background:var(--third)"></i>3rd</span><span><i style="background:var(--fifth)"></i>5th</span><span><i style="background:var(--ext)"></i>Extension</span><span><i style="background:#B8C0CE;opacity:.6"></i>Gray = the chord&#39;s own triad</span>';
 }
 function say(){
   var lab=labels(S.shape,S.chord), c=CHORDS[S.chord].name;
   var list=WORD[lab[0]]+", "+WORD[lab[1]]+" and "+WORD[lab[2]];
   var extra=c==="Am"?" Think: <b>Am sus2</b>.":c==="G"?" The 3rd of G is the 2 of Am.":" Same shape, still works.";
+  extra+=" <b>Gray</b> is the real "+c+" triad right there.";
   return "Over "+c+" your 3 notes are "+list+"."+extra;
 }
 function render(){
@@ -279,7 +299,7 @@ function stopLoop(){
   if(loop){ loop=null; $("go").setAttribute("aria-pressed","false"); $("go").innerHTML="&#9654; Play the loop"; }
   if(ctx) damp(ctx.currentTime+0.01);
 }
-window.__st={CHORDS:CHORDS,SHAPES:SHAPES,labels:labels,shapeMidis:shapeMidis,S:S,render:render,bar:bar};
+window.__st={ghost:ghost,CHORDS:CHORDS,SHAPES:SHAPES,labels:labels,shapeMidis:shapeMidis,S:S,render:render,bar:bar};
 build(); render();
 </script>
 </body>
